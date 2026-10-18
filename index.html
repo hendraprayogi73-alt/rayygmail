@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0a0d14">
   <title>RAYYGMAIL — Dashboard Setoran</title>
-  <?!= include('Styles'); ?>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
@@ -39,9 +38,11 @@
     </section>
     <section class="bottom-cta"><div><div class="eyebrow">RAYYGMAIL WORKSPACE</div><h2>Semua aktivitas dalam satu tempat.</h2><p>Gunakan akun RAYYGMAIL untuk memantau pengajuan dan riwayatmu.</p></div><button class="btn btn-primary btn-lg" id="bottomRegister">Buat akun gratis ↗</button></section>
   </main>
-  <footer class="footer"><a class="brand" href="#home"><span class="brand-icon">R</span><span>RAYY<span class="accent">GMAIL</span><small>SUBMISSION PLATFORM</small></span></a><span>© <span id="year"></span> RAYYGMAIL. Gunakan layanan dengan bijak.</span><a href="?page=admin" class="admin-link">Akses admin</a></footer>
+  <footer class="footer"><a class="brand" href="#home"><span class="brand-icon">R</span><span>RAYY<span class="accent">GMAIL</span><small>SUBMISSION PLATFORM</small></span></a><span>© <span id="year"></span> RAYYGMAIL. Gunakan layanan dengan bijak.</span><a href="admin.html" class="admin-link">Akses admin</a></footer>
   <div class="toast" id="toast" role="status"></div>
-  <script>const APP_URL = <?!= JSON.stringify(appUrl) ?>;</script>
-  <?!= include('App.js'); ?>
+
+  <!-- GANTI dengan URL Web App Google Apps Script Anda (yang berakhiran /exec) -->
+  <script>const APP_URL = "https://script.google.com/macros/s/GANTI_DENGAN_ID_DEPLOYMENT/exec";</script>
+  <script src="app.js"></script>
 </body>
 </html>
