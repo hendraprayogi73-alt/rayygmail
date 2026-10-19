@@ -6,7 +6,7 @@ module.exports = async function handler(req, res) {
   }
 
   const gasUrl = process.env.GAS_URL;
-  if (!gasUrl || !gasUrl.startsWith('https://script.google.com/macros/s/AKfycby01evxtQAPrHK2WihDczhxapnR-e_sCEtgMVXpeAmpRYyi3FreuKD-tc1FKknZpToX/exec')) {
+  if (!gasUrl || !gasUrl.startsWith('https://script.google.com/')) {
     return res.status(500).json({ ok: false, message: 'Backend belum dikonfigurasi.' });
   }
 
