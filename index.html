@@ -1,58 +1,67 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RAYYGMAIL</title>
+  <meta name="theme-color" content="#0a0b12">
+  <title>RAYYGMAIL — Masuk</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
   <header class="topbar">
-    <a class="brand" href="#" onclick="return false"><span class="brand-icon">✉</span><span>RAYY<span class="accent">GMAIL</span><small>SUBMISSION PLATFORM</small></span></a>
-    <span class="secure-label">SISTEM PENGAJUAN</span>
+    <a class="brand" href="/"><span class="brand-icon">✉</span>
+      <span>RAYY<span class="accent">GMAIL</span><small>SUBMISSION PLATFORM</small></span>
+    </a>
+    <span class="secure-label">WORKSPACE</span>
   </header>
+
   <main class="container">
-    <section id="authView" class="auth-screen">
-      <div class="auth-intro"><div class="eyebrow"><span class="pulse"></span> RAYYGMAIL WORKSPACE</div><h1>Kelola pengajuan.<br><span class="gradient-text">Pantau semuanya.</span></h1><p>Masuk atau buat akun untuk melihat dashboard, status pengajuan, dan riwayat saldo.</p><div class="trust-row"><span>✦ Status transparan</span><span>✦ Akun pribadi</span><span>✦ Admin terpisah</span></div></div>
+    <section class="auth-screen">
+      <div class="auth-intro">
+        <div class="eyebrow"><span class="pulse"></span> RAYYGMAIL WORKSPACE</div>
+        <h1>Kelola pengajuan.<br><span class="gradient-text">Pantau semuanya.</span></h1>
+        <p>Masuk ke akun untuk memantau pengajuan, saldo, dan riwayat aktivitas.</p>
+        <div class="trust-row">
+          <span>✦ Status transparan</span>
+          <span>✦ Akun pribadi</span>
+          <span>✦ Admin terpisah</span>
+        </div>
+      </div>
+
       <div class="auth-card">
-        <div class="brand auth-brand"><span class="brand-icon">✉</span><span>RAYYGMAIL <span class="accent">STORAN</span></span></div>
-        <div class="auth-tabs"><button class="auth-tab active" data-mode="login">Masuk</button><button class="auth-tab" data-mode="register">Daftar</button></div>
+        <div class="brand auth-brand">
+          <span class="brand-icon">✉</span>
+          <span>RAYYGMAIL <span class="accent">WORKSPACE</span></span>
+        </div>
+
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-mode="login" type="button">Masuk</button>
+          <button class="auth-tab" data-mode="register" type="button">Daftar</button>
+        </div>
+
         <form id="authForm">
-          <label id="nameWrap" class="hidden">Nama lengkap<input id="authName" maxlength="80" autocomplete="name" placeholder="Nama kamu"></label>
-          <label>Email<input id="authEmail" type="email" maxlength="150" autocomplete="email" required placeholder="anda@email.com"></label>
-          <label>Kata sandi<input id="authPassword" type="password" minlength="8" maxlength="200" autocomplete="current-password" required placeholder="Minimal 8 karakter"></label>
+          <label id="nameWrap" class="hidden">Nama lengkap
+            <input id="authName" maxlength="80" autocomplete="name" placeholder="Nama kamu">
+          </label>
+          <label>Email
+            <input id="authEmail" type="email" maxlength="150" autocomplete="email" required placeholder="anda@email.com">
+          </label>
+          <label>Kata sandi
+            <input id="authPassword" type="password" minlength="8" maxlength="200" autocomplete="current-password" required placeholder="Minimal 8 karakter">
+          </label>
           <p class="privacy-note">Gunakan kata sandi khusus akun ini. Jangan masukkan kata sandi Gmail, OTP, atau kode pemulihan.</p>
-          <button class="btn btn-primary btn-wide" id="authSubmit" type="submit">Masuk</button>
+          <button class="btn btn-primary btn-wide" id="authSubmit" type="submit">Masuk →</button>
         </form>
         <p class="message" id="authMessage" role="status"></p>
       </div>
     </section>
-    <section id="authView" class="auth-screen">
-      <div class="section-heading"><div><div class="eyebrow">PERSONAL WORKSPACE</div><h2>Dashboard <span class="accent">Pengguna</span></h2><p>Halo, <strong id="userName">Pengguna</strong>.</p></div><button class="btn btn-outline" id="logoutBtn">Keluar ↗</button></div>
-      <div class="dashboard-grid">
-        <article class="metric-card balance-card"><div class="metric-top"><span>Saldo tersedia</span><span>◈</span></div><strong id="balanceValue">Rp0</strong><small>Penyesuaian saldo dicatat admin.</small></article>
-        <article class="metric-card"><div class="metric-top"><span>Total pengajuan</span><span>▤</span></div><strong id="submissionCount">0</strong><small>Seluruh pengajuan kamu.</small></article>
-        <article class="metric-card"><div class="metric-top"><span>Disetujui</span><span>✓</span></div><strong id="approvedCount">0</strong><small>Pengajuan selesai diperiksa.</small></article>
-      </div>
-      <div class="workspace-grid">
-        <div class="panel"><div class="panel-heading"><div><h3>Buat pengajuan</h3><p>Isi informasi yang diperlukan saja.</p></div></div>
-          <form id="submissionForm">
-            <label>Jenis pengajuan<select id="submissionType"><option>Setoran Gmail</option><option>Pertanyaan layanan</option></select></label>
-            <label>ID referensi / email kontak<input id="submissionReference" maxlength="180" required placeholder="ID referensi atau email kontak"></label>
-            <label>Catatan tambahan <span class="optional">Opsional</span><textarea id="submissionNote" maxlength="500" rows="3" placeholder="Jelaskan kebutuhanmu tanpa data rahasia"></textarea></label>
-            <div class="warning-note">⚠ Jangan masukkan kata sandi Gmail, OTP, atau kode pemulihan.</div>
-            <button class="btn btn-primary btn-wide" type="submit">Kirim pengajuan →</button>
-          </form><p class="message" id="submissionMessage" role="status"></p>
-        </div>
-        <div class="panel"><div class="panel-heading"><div><h3>Aktivitas terbaru</h3><p>Status pengajuan terkini.</p></div><button class="text-btn" id="refreshBtn">↻ Muat ulang</button></div><div id="recentActivity" class="activity-list"><div class="empty-state">Belum ada aktivitas.</div></div></div>
-      </div>
-      <div class="panel table-panel"><div class="panel-heading"><div><h3>Riwayat pengajuan</h3><p>Daftar pengajuan yang pernah dikirim.</p></div></div><div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Jenis</th><th>Referensi</th><th>Status</th><th>Catatan admin</th></tr></thead><tbody id="submissionRows"></tbody></table></div></div>
-      <div class="panel table-panel"><div class="panel-heading"><div><h3>Riwayat saldo</h3><p>Catatan transaksi yang dibuat admin.</p></div></div><div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Nominal</th><th>Status</th></tr></thead><tbody id="transactionRows"></tbody></table></div></div>
-    </section>
   </main>
-  <footer class="footer"><span>© <span id="year"></span> RAYYGMAIL · Gunakan layanan dengan bijak.</span></footer>
-  <script src="/App.js"></script>
+
+  <footer class="footer">© <span id="year"></span> RAYYGMAIL · Gunakan layanan dengan bijak.</footer>
+  <script src="/app.js"></script>
 </body>
 </html>
