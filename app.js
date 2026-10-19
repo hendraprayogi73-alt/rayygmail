@@ -1,4 +1,3 @@
-
 'use strict';
 
 // Ganti dengan URL Web App Google Apps Script milikmu.
@@ -36,6 +35,13 @@ function money(value) {
 function dateText(value) {
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? '-' : d.toLocaleString('id-ID');
+}
+
+function statusClass(status) {
+  if (status === 'Disetujui' || status === 'Selesai') return 'status s-ok';
+  if (status === 'Ditolak') return 'status s-bad';
+  if (status === 'Menunggu') return 'status s-wait';
+  return 'status';
 }
 
 function setMessage(id, message, isError = false) {
@@ -193,30 +199,87 @@ async function initDashboard() {
 
   bindLogout();
 
+  const VIEWS = ['home', 'history', 'deposit', 'balance', 'profile'];
+  let provider = 'DANA';
+  let currentBalance = 0;
+  let minWithdrawal = 1000;
+  let withdrawalOpen = true;
+
+  function showView(name) {
+    if (VIEWS.indexOf(name) === -1) name = 'home';
+    document.querySelectorAll('.view').forEach(v =>
+      v.classList.toggle('active', v.dataset.view === name));
+    document.querySelectorAll('[data-nav]').forEach(b =>
+      b.classList.toggle('active', b.dataset.nav === name));
+    window.scrollTo({ top: 0 });
+    history.replaceState(null, '', '#' + name);
+  }
+
+  document.querySelectorAll('[data-nav]').forEach(b =>
+    b.addEventListener('click', () => showView(b.dataset.nav)));
+  document.querySelectorAll('[data-go]').forEach(b =>
+    b.addEventListener('click', () => showView(b.dataset.go)));
+
+  function setProvider(next) {
+    provider = next;
+    document.querySelectorAll('.provider-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.provider === provider));
+    $('walletNumber').placeholder = '081234567890';
+    $('walletHint').textContent =
+      'Simpan nomor ' + provider + ' agar tidak perlu mengetik ulang. Hanya angka, 10–15 digit.';
+  }
+
+  document.querySelectorAll('.provider-btn').forEach(b =>
+    b.addEventListener('click', () => setProvider(b.dataset.provider)));
+
+  function renderBalanceInfo() {
+    const info = $('balanceInfo');
+    if (currentBalance >= minWithdrawal) {
+      info.textContent = 'Saldo kamu sudah memenuhi minimum penarikan ' + money(minWithdrawal) + '.';
+    } else {
+      info.textContent = 'Saldo kamu ' + money(currentBalance) + ', kurang ' +
+        money(minWithdrawal - currentBalance) + ' lagi untuk mencapai minimum penarikan ' +
+        money(minWithdrawal) + '.';
+    }
+  }
+
   async function load() {
     try {
       const data = await api('dashboard', { token: getToken() });
-      $('userName').textContent = data.user.name;
-      $('balanceValue').textContent = money(data.user.balance);
-      $('submissionCount').textContent = data.stats.total;
-      $('approvedCount').textContent = data.stats.approved;
+      const subs = data.submissions;
 
-      const activity = $('recentActivity');
-      activity.innerHTML = data.submissions.slice(0, 5).map(s => `
+      currentBalance = Number(data.user.balance) || 0;
+      minWithdrawal = Number(data.minWithdrawal) || 1000;
+      withdrawalOpen = data.withdrawalOpen !== false;
+
+      $('userName').textContent = data.user.name;
+      $('profileName').textContent = data.user.name;
+      $('profileEmail').textContent = data.user.email;
+      $('profileTotal').textContent = data.stats.total;
+      document.querySelectorAll('.js-balance').forEach(el => {
+        el.textContent = money(currentBalance);
+      });
+
+      $('statApproved').textContent = data.stats.approved;
+      $('statPending').textContent = subs.filter(s => s.status === 'Menunggu').length;
+      $('statProcess').textContent = subs.filter(s => s.status === 'Diproses').length;
+      $('statRejected').textContent = subs.filter(s => s.status === 'Ditolak').length;
+
+      $('recentActivity').innerHTML = subs.slice(0, 5).map(s => `
         <div class="activity-item">
           <div><strong>${escapeHtml(s.type)}</strong>
             <p>${escapeHtml(s.reference)}</p>
             <small>${escapeHtml(dateText(s.createdAt))}</small>
           </div>
-          <span class="status">${escapeHtml(s.status)}</span>
+          <span class="${statusClass(s.status)}">${escapeHtml(s.status)}</span>
         </div>`).join('') || '<div class="empty-state">Belum ada aktivitas.</div>';
 
-      $('submissionRows').innerHTML = data.submissions.map(s => `
+      $('submissionRows').innerHTML = subs.map(s => `
         <tr>
           <td>${escapeHtml(dateText(s.createdAt))}</td>
           <td>${escapeHtml(s.type)}</td>
           <td>${escapeHtml(s.reference)}</td>
-          <td><span class="status">${escapeHtml(s.status)}</span></td>
+          <td><span class="${statusClass(s.status)}">${escapeHtml(s.status)}</span></td>
           <td>${escapeHtml(s.adminNote || '-')}</td>
         </tr>`).join('') || '<tr><td colspan="5">Belum ada pengajuan.</td></tr>';
 
@@ -228,6 +291,37 @@ async function initDashboard() {
           <td>${escapeHtml(money(t.amount))}</td>
           <td>${escapeHtml(t.status)}</td>
         </tr>`).join('') || '<tr><td colspan="5">Belum ada transaksi.</td></tr>';
+
+      // Saldo & penarikan
+      renderBalanceInfo();
+
+      const statusBox = $('withdrawStatus');
+      statusBox.classList.toggle('closed', !withdrawalOpen);
+      statusBox.innerHTML = 'Status penarikan: <b>' +
+        (withdrawalOpen ? '🟢 Dibuka' : '🔴 Ditutup') + '</b>';
+      $('withdrawBtn').disabled = !withdrawalOpen;
+
+      const badge = $('walletBadge');
+      if (data.wallet) {
+        badge.textContent = 'Tersimpan';
+        badge.className = 'badge ok';
+        setProvider(data.wallet.provider);
+        if (document.activeElement !== $('walletNumber')) {
+          $('walletNumber').value = data.wallet.number;
+        }
+      } else {
+        badge.textContent = 'Belum diisi';
+        badge.className = 'badge warn';
+      }
+
+      $('withdrawalRows').innerHTML = (data.withdrawals || []).map(w => `
+        <tr>
+          <td>${escapeHtml(dateText(w.createdAt))}</td>
+          <td>${escapeHtml(w.provider)} ${escapeHtml(w.number)}</td>
+          <td>${escapeHtml(money(w.amount))}</td>
+          <td><span class="${statusClass(w.status)}">${escapeHtml(w.status)}</span></td>
+          <td>${escapeHtml(w.adminNote || '-')}</td>
+        </tr>`).join('') || '<tr><td colspan="5">Belum ada penarikan.</td></tr>';
     } catch (error) {
       setMessage('submissionMessage', error.message, true);
     }
@@ -256,7 +350,50 @@ async function initDashboard() {
     }
   });
 
+  $('walletForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const button = event.submitter;
+    if (button) button.disabled = true;
+
+    try {
+      const result = await api('saveWallet', {
+        token: getToken(),
+        provider: provider,
+        number: $('walletNumber').value.trim()
+      });
+
+      setMessage('walletMessage', result.message);
+      await load();
+    } catch (error) {
+      setMessage('walletMessage', error.message, true);
+    } finally {
+      if (button) button.disabled = false;
+    }
+  });
+
+  $('withdrawForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const button = $('withdrawBtn');
+    button.disabled = true;
+
+    try {
+      const result = await api('requestWithdrawal', {
+        token: getToken(),
+        amount: Number($('withdrawAmount').value)
+      });
+
+      setMessage('withdrawMessage', result.message);
+      $('withdrawForm').reset();
+      await load();
+    } catch (error) {
+      setMessage('withdrawMessage', error.message, true);
+    } finally {
+      button.disabled = !withdrawalOpen;
+    }
+  });
+
   bindRefresh(load);
+  showView((window.location.hash || '').replace('#', '') || 'home');
   await load();
 }
 
@@ -320,7 +457,7 @@ async function initAdmin() {
           <td>${escapeHtml(t.status)}</td>
         </tr>`).join('') || '<tr><td colspan="6">Belum ada transaksi.</td></tr>';
 
-      document.querySelectorAll('.save-status').forEach(button => {
+      document.querySelectorAll('.save-status:not(.save-withdrawal)').forEach(button => {
         button.addEventListener('click', async () => {
           button.disabled = true;
           try {
@@ -341,6 +478,59 @@ async function initAdmin() {
           }
         });
       });
+
+      // Penarikan saldo
+      const wBody = $('adminWithdrawalRows');
+      if (wBody) {
+        const list = data.withdrawals || [];
+
+        wBody.innerHTML = list.map(w => {
+          const final = w.status === 'Selesai' || w.status === 'Ditolak';
+          return `
+          <tr>
+            <td>${escapeHtml(dateText(w.createdAt))}</td>
+            <td>${escapeHtml(w.userName)}<br><small>${escapeHtml(w.userEmail)}</small></td>
+            <td>${escapeHtml(w.provider)} ${escapeHtml(w.number)}</td>
+            <td>${escapeHtml(money(w.amount))}</td>
+            <td>
+              <select class="status-select" data-wstatus-id="${escapeHtml(w.id)}" ${final ? 'disabled' : ''}>
+                ${['Menunggu','Diproses','Selesai','Ditolak'].map(status =>
+                  `<option ${status === w.status ? 'selected' : ''}>${status}</option>`
+                ).join('')}
+              </select>
+            </td>
+            <td><input class="admin-note" data-wnote-id="${escapeHtml(w.id)}" maxlength="500"
+              value="${escapeHtml(w.adminNote || '')}" placeholder="Catatan admin" ${final ? 'disabled' : ''}></td>
+            <td><button class="btn btn-primary save-status save-withdrawal" data-wsave-id="${escapeHtml(w.id)}"
+              ${final ? 'disabled' : ''}>Simpan</button></td>
+          </tr>`;
+        }).join('') || '<tr><td colspan="7">Belum ada penarikan.</td></tr>';
+
+        wBody.querySelectorAll('.save-withdrawal').forEach(button => {
+          button.addEventListener('click', async () => {
+            button.disabled = true;
+            try {
+              const id = button.dataset.wsaveId;
+              const status = document.querySelector(`[data-wstatus-id="${CSS.escape(id)}"]`).value;
+              const adminNote = document.querySelector(`[data-wnote-id="${CSS.escape(id)}"]`).value;
+
+              if (status === 'Menunggu') {
+                throw new Error('Pilih Diproses, Selesai, atau Ditolak.');
+              }
+
+              const result = await api('adminUpdateWithdrawal', {
+                token: getToken(), id, status, adminNote
+              });
+
+              setMessage('adminMessage', result.message);
+              await load();
+            } catch (error) {
+              setMessage('adminMessage', error.message, true);
+              button.disabled = false;
+            }
+          });
+        });
+      }
     } catch (error) {
       setMessage('adminMessage', error.message, true);
     }
