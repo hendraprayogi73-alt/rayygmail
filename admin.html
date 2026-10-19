@@ -1,214 +1,90 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0a0d14">
-  <meta name="robots" content="noindex,nofollow">
-  <title>RAYYGMAIL | Admin</title>
-  <link rel="stylesheet" href="style.css">
+  <title>RAYYGMAIL — Admin</title>
+  <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
-<div class="admin-shell">
-  <section id="adminLoginPanel" class="admin-login"><a class="brand" href="index.html"><span class="brand-icon">R</span><span>RAYY<span class="accent">GMAIL</span><small>ADMIN CONTROL CENTER</small></span></a><div class="eyebrow" style="margin-top:28px">RESTRICTED ACCESS</div><h1>Admin <span class="gradient-text">Control Center</span></h1><p>Masuk untuk mengelola pengajuan, pengguna, dan catatan saldo. Kredensial admin diperiksa di server.</p><form id="adminLoginForm" class="form-grid"><label>Kata sandi admin<input id="adminPassword" type="password" autocomplete="current-password" required placeholder="Masukkan kata sandi admin"></label><button id="adminLoginBtn" class="btn btn-primary btn-wide" type="submit">Masuk ke dashboard →</button></form><p id="adminLoginMessage" class="message" role="status"></p><a class="admin-link" href="index.html" style="display:inline-block;margin-top:18px">← Kembali ke website</a></section>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
 
-  <section id="adminApp" class="hidden">
-    <header class="admin-top"><a class="brand" href="index.html"><span class="brand-icon">R</span><span>RAYY<span class="accent">GMAIL</span><small>ADMIN CONTROL CENTER</small></span></a><div class="top-actions"><button id="adminRefresh" class="btn btn-outline">↻ Refresh data</button><button id="adminLogout" class="btn btn-primary">Keluar ↗</button></div></header>
-    <div class="section-heading"><div><div class="eyebrow">OVERVIEW</div><h2>Dashboard <span class="accent">Admin</span></h2><p>Kelola pengajuan dan pengguna RAYYGMAIL.</p></div><span class="live-tag"><b></b> ADMIN SESSION ACTIVE</span></div>
-    <div class="admin-metrics"><article class="metric-card"><div class="metric-top">Total pengguna <span class="metric-symbol">♙</span></div><strong id="statUsers">0</strong><small>Pengguna terdaftar</small></article><article class="metric-card"><div class="metric-top">Menunggu <span class="metric-symbol">◷</span></div><strong id="statPending">0</strong><small>Perlu diperiksa</small></article><article class="metric-card"><div class="metric-top">Disetujui <span class="metric-symbol green-text">✓</span></div><strong id="statApproved">0</strong><small>Pengajuan disetujui</small></article><article class="metric-card"><div class="metric-top">Transaksi <span class="metric-symbol">◈</span></div><strong id="statTransactions">0</strong><small>Catatan saldo</small></article></div>
-    <div class="admin-layout">
-      <aside class="admin-sidebar"><nav class="admin-nav"><button class="active" data-section="submissions">▤ Pengajuan</button><button data-section="users">♙ Pengguna</button><button data-section="transactions">◈ Transaksi saldo</button></nav><p class="privacy-note" style="margin:15px 5px 3px">Data ditampilkan dari Google Sheets. Jangan membagikan akses admin.</p></aside>
-      <div class="admin-content">
-        <section id="section-submissions" class="admin-section active"><div class="panel"><div class="panel-heading"><div><h3>Manajemen pengajuan</h3><p>Periksa referensi, ubah status, dan tambahkan catatan.</p></div></div><div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Pengguna</th><th>Jenis</th><th>Referensi</th><th>Status</th><th>Catatan admin</th><th>Aksi</th></tr></thead><tbody id="adminSubmissionRows"><tr><td colspan="7" class="empty-state">Memuat data…</td></tr></tbody></table></div></div></section>
-        <section id="section-users" class="admin-section"><div class="panel"><div class="panel-heading"><div><h3>Daftar pengguna</h3><p>Aktifkan/nonaktifkan akun atau catat penyesuaian saldo.</p></div></div><div class="table-wrap"><table><thead><tr><th>Nama</th><th>Email</th><th>Saldo</th><th>Status</th><th>Ubah saldo (Rp)</th><th>Keterangan</th><th>Aksi</th></tr></thead><tbody id="adminUserRows"><tr><td colspan="7" class="empty-state">Memuat data…</td></tr></tbody></table></div></div></section>
-        <section id="section-transactions" class="admin-section"><div class="panel"><div class="panel-heading"><div><h3>Riwayat transaksi saldo</h3><p>Semua penyesuaian saldo dicatat untuk audit.</p></div></div><div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Pengguna ID</th><th>Jenis</th><th>Nominal</th><th>Keterangan</th><th>Status</th></tr></thead><tbody id="adminTransactionRows"><tr><td colspan="6" class="empty-state">Memuat data…</td></tr></tbody></table></div></div></section>
-      </div>
+  <header class="topbar">
+    <a class="brand" href="/admin"><span class="brand-icon">✉</span>
+      <span>RAYY<span class="accent">GMAIL</span><small>ADMIN CONSOLE</small></span>
+    </a>
+    <div class="top-actions">
+      <span class="secure-label">ADMINISTRATOR</span>
+      <button class="btn btn-outline" id="logoutBtn">Keluar ↗</button>
     </div>
-  </section>
-</div>
-<div class="toast" id="adminToast" role="status"></div>
+  </header>
 
-<!-- GANTI dengan URL Web App Google Apps Script Anda (yang berakhiran /exec), sama dengan di index.html -->
-<script>const APP_URL = "https://script.google.com/macros/s/AKfycby01evxtQAPrHK2WihDczhxapnR-e_sCEtgMVXpeAmpRYyi3FreuKD-tc1FKknZpToX/exec";</script>
-<script>
-(() => {
-  'use strict';
-  const $ = id => document.getElementById(id);
-  let adminToken = sessionStorage.getItem('rayygmail_admin_token') || '';
-  let cached = { users: [], submissions: [], transactions: [], stats: { users: 0, pending: 0, approved: 0, transactions: 0 } };
+  <main class="container page-content">
+    <section class="section-heading">
+      <div><div class="eyebrow">CONTROL CENTER</div>
+        <h1>Panel <span class="accent">Admin</span></h1>
+        <p>Kelola pengajuan, pengguna, dan catatan saldo.</p>
+      </div>
+      <button class="btn btn-outline" id="refreshBtn">↻ Muat ulang</button>
+    </section>
 
-  const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const rupiah = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
-  const dateText = v => {
-    if (!v) return '-';
-    const d = new Date(v);
-    return isNaN(d) ? '-' : d.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
-  };
+    <section class="dashboard-grid">
+      <article class="metric-card"><div class="metric-top"><span>Total pengguna</span><span>♙</span></div><strong id="adminUserCount">0</strong></article>
+      <article class="metric-card"><div class="metric-top"><span>Total pengajuan</span><span>▤</span></div><strong id="adminSubmissionCount">0</strong></article>
+      <article class="metric-card balance-card"><div class="metric-top"><span>Menunggu pemeriksaan</span><span>◷</span></div><strong id="adminPendingCount">0</strong></article>
+    </section>
 
-  function toast(msg) {
-    const el = $('adminToast');
-    el.textContent = msg;
-    el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 3500);
-  }
-  function message(msg, error = false) {
-    $('adminLoginMessage').textContent = msg;
-    $('adminLoginMessage').classList.toggle('error', error);
-  }
+    <section class="panel table-panel">
+      <div class="panel-heading"><div><h2>Pengajuan masuk</h2><p>Periksa data dan perbarui status pengajuan.</p></div></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Tanggal</th><th>Pengguna</th><th>Jenis</th><th>Referensi</th><th>Catatan pengguna</th><th>Status</th><th>Catatan admin</th><th>Aksi</th></tr></thead>
+        <tbody id="adminSubmissionRows"></tbody>
+      </table></div>
+    </section>
 
-  // Pengganti google.script.run: memanggil Google Apps Script lewat fetch (doPost)
-  async function call(fn, ...args) {
-    if (typeof APP_URL === 'undefined' || !APP_URL || APP_URL.includes('GANTI_DENGAN')) {
-      throw new Error('APP_URL belum diisi di admin.html.');
-    }
-    let res;
-    try {
-      res = await fetch(APP_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ fn, args })
-      });
-    } catch (_) {
-      throw new Error('Tidak dapat terhubung ke server. Periksa koneksi atau URL Apps Script.');
-    }
-    let data;
-    try {
-      data = await res.json();
-    } catch (_) {
-      throw new Error('Respons server tidak valid. Pastikan Web App sudah di-deploy dengan akses "Anyone".');
-    }
-    if (!data || data.ok === false) {
-      throw new Error((data && data.message) || 'Terjadi kesalahan server.');
-    }
-    return data.result;
-  }
+    <section class="workspace-grid">
+      <div class="panel">
+        <div class="panel-heading"><div><h2>Penyesuaian saldo</h2><p>Semua perubahan dicatat di riwayat transaksi.</p></div></div>
+        <form id="balanceForm">
+          <label>Pilih pengguna
+            <select id="balanceUser" required><option value="">Memuat pengguna…</option></select>
+          </label>
+          <label>Jenis transaksi
+            <select id="balanceType"><option value="credit">Tambah saldo</option><option value="debit">Kurangi saldo</option></select>
+          </label>
+          <label>Nominal (Rp)
+            <input id="balanceAmount" type="number" min="1" max="1000000000" step="1" required placeholder="Contoh: 50000">
+          </label>
+          <label>Keterangan
+            <input id="balanceDescription" maxlength="200" required placeholder="Contoh: Penyesuaian saldo">
+          </label>
+          <button class="btn btn-primary btn-wide" type="submit">Simpan transaksi →</button>
+        </form>
+        <p class="message" id="balanceMessage" role="status"></p>
+      </div>
 
-  function badge(status) {
-    const cls = {
-      'Pending': 'pending', 'Disetujui': 'disetujui', 'Ditolak': 'ditolak',
-      'Selesai': 'selesai', 'Aktif': 'aktif', 'Nonaktif': 'nonaktif'
-    }[status] || 'pending';
-    return `<span class="status status-${cls}">${esc(status || '-')}</span>`;
-  }
+      <div class="panel">
+        <div class="panel-heading"><div><h2>Daftar pengguna</h2><p>Saldo dan peran akun.</p></div></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Nama</th><th>Email</th><th>Peran</th><th>Saldo</th></tr></thead>
+          <tbody id="adminUserRows"></tbody>
+        </table></div>
+      </div>
+    </section>
 
-  async function login(password) {
-    const result = await call('adminLogin', password);
-    adminToken = result.token;
-    sessionStorage.setItem('rayygmail_admin_token', adminToken);
-    $('adminLoginPanel').classList.add('hidden');
-    $('adminApp').classList.remove('hidden');
-    await refresh();
-  }
+    <section class="panel table-panel">
+      <div class="panel-heading"><div><h2>Transaksi terbaru</h2><p>Catatan perubahan saldo.</p></div></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Tanggal</th><th>Pengguna</th><th>Jenis</th><th>Keterangan</th><th>Nominal</th><th>Status</th></tr></thead>
+        <tbody id="adminTransactionRows"></tbody>
+      </table></div>
+    </section>
+    <p class="message" id="adminMessage" role="status"></p>
+  </main>
 
-  $('adminLoginForm').addEventListener('submit', async e => {
-    e.preventDefault();
-    const b = $('adminLoginBtn');
-    b.disabled = true;
-    b.textContent = 'Memverifikasi…';
-    message('');
-    try {
-      await login($('adminPassword').value);
-      $('adminPassword').value = '';
-      toast('Login admin berhasil.');
-    } catch (err) {
-      message(err.message, true);
-    } finally {
-      b.disabled = false;
-      b.textContent = 'Masuk ke dashboard →';
-    }
-  });
-
-  async function refresh() {
-    if (!adminToken) return;
-    try {
-      cached = await call('getAdminData', adminToken);
-      render();
-      $('adminLoginPanel').classList.add('hidden');
-      $('adminApp').classList.remove('hidden');
-    } catch (err) {
-      if (/Sesi berakhir|Akses admin/i.test(err.message)) {
-        adminToken = '';
-        sessionStorage.removeItem('rayygmail_admin_token');
-        $('adminApp').classList.add('hidden');
-        $('adminLoginPanel').classList.remove('hidden');
-        message('Sesi admin berakhir. Silakan masuk kembali.', true);
-      } else {
-        toast(err.message);
-      }
-    }
-  }
-
-  function render() {
-    const d = cached;
-    const s = d.stats || {};
-    $('statUsers').textContent = s.users || 0;
-    $('statPending').textContent = s.pending || 0;
-    $('statApproved').textContent = s.approved || 0;
-    $('statTransactions').textContent = s.transactions || 0;
-
-    const subs = d.submissions || [];
-    const users = d.users || [];
-    const trx = d.transactions || [];
-
-    $('adminSubmissionRows').innerHTML = subs.length
-      ? subs.map(x => `<tr><td>${esc(dateText(x.createdAt))}</td><td>${esc(x.name)}<br><small>${esc(x.userId)}</small></td><td>${esc(x.type)}</td><td>${esc(x.reference)}${x.note ? `<br><small>${esc(x.note)}</small>` : ''}</td><td>${badge(x.status)}</td><td><input class="admin-note-input" id="note-${esc(x.id)}" value="${esc(x.adminNote || '')}" placeholder="Catatan admin"></td><td><div class="admin-table-actions"><button class="small-btn approve" data-action="status" data-id="${esc(x.id)}" data-status="Disetujui">Setujui</button><button class="small-btn reject" data-action="status" data-id="${esc(x.id)}" data-status="Ditolak">Tolak</button><button class="small-btn" data-action="status" data-id="${esc(x.id)}" data-status="Pending">Pending</button></div></td></tr>`).join('')
-      : '<tr><td colspan="7" class="empty-state">Belum ada pengajuan.</td></tr>';
-
-    $('adminUserRows').innerHTML = users.length
-      ? users.map(u => `<tr><td>${esc(u.name)}<br><small>${esc(u.id)}</small></td><td>${esc(u.email)}</td><td>${esc(rupiah(u.balance))}</td><td>${badge(u.status)}</td><td><input class="admin-note-input" type="number" id="amount-${esc(u.id)}" placeholder="10000 / -5000"></td><td><input class="admin-note-input" id="desc-${esc(u.id)}" placeholder="Alasan penyesuaian"></td><td><div class="admin-table-actions"><button class="small-btn approve" data-action="balance" data-id="${esc(u.id)}">Simpan saldo</button><button class="small-btn" data-action="userstatus" data-id="${esc(u.id)}" data-status="${u.status === 'Aktif' ? 'Nonaktif' : 'Aktif'}">${u.status === 'Aktif' ? 'Nonaktifkan' : 'Aktifkan'}</button></div></td></tr>`).join('')
-      : '<tr><td colspan="7" class="empty-state">Belum ada pengguna.</td></tr>';
-
-    $('adminTransactionRows').innerHTML = trx.length
-      ? trx.map(x => `<tr><td>${esc(dateText(x.createdAt))}</td><td>${esc(x.userId)}</td><td>${esc(x.type)}</td><td class="${Number(x.amount) < 0 ? 'danger-text' : 'green-text'}">${Number(x.amount) > 0 ? '+' : ''}${esc(rupiah(x.amount))}</td><td>${esc(x.description)}</td><td>${badge(x.status)}</td></tr>`).join('')
-      : '<tr><td colspan="6" class="empty-state">Belum ada transaksi saldo.</td></tr>';
-  }
-
-  document.querySelectorAll('.admin-nav button').forEach(b => b.addEventListener('click', () => {
-    document.querySelectorAll('.admin-nav button').forEach(x => x.classList.toggle('active', x === b));
-    document.querySelectorAll('.admin-section').forEach(x => x.classList.toggle('active', x.id === 'section-' + b.dataset.section));
-  }));
-
-  document.addEventListener('click', async e => {
-    const b = e.target.closest('button[data-action]');
-    if (!b) return;
-    const id = b.dataset.id, action = b.dataset.action;
-    b.disabled = true;
-    try {
-      if (action === 'status') {
-        const note = $('note-' + id).value;
-        await call('adminUpdateSubmission', adminToken, id, b.dataset.status, note);
-        toast('Status pengajuan diperbarui.');
-      } else if (action === 'userstatus') {
-        await call('adminSetUserStatus', adminToken, id, b.dataset.status);
-        toast('Status pengguna diperbarui.');
-      } else if (action === 'balance') {
-        const amount = $('amount-' + id).value;
-        const desc = $('desc-' + id).value;
-        if (!amount || Number(amount) === 0) throw new Error('Isi nominal saldo, gunakan angka negatif untuk mengurangi.');
-        await call('adminAdjustBalance', adminToken, id, Number(amount), desc);
-        toast('Saldo berhasil diperbarui dan dicatat.');
-      }
-      await refresh();
-    } catch (err) {
-      toast(err.message);
-    } finally {
-      b.disabled = false;
-    }
-  });
-
-  $('adminRefresh').addEventListener('click', refresh);
-  $('adminLogout').addEventListener('click', async () => {
-    try { if (adminToken) await call('logout', adminToken); } catch (_) {}
-    adminToken = '';
-    sessionStorage.removeItem('rayygmail_admin_token');
-    $('adminApp').classList.add('hidden');
-    $('adminLoginPanel').classList.remove('hidden');
-    message('Kamu sudah keluar dari dashboard admin.');
-  });
-
-  if (adminToken) refresh();
-})();
-</script>
+  <footer class="footer">© <span id="year"></span> RAYYGMAIL · Admin console.</footer>
+  <script src="/app.js"></script>
 </body>
 </html>
