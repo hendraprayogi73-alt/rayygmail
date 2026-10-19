@@ -29,7 +29,7 @@
         <p class="message" id="authMessage" role="status"></p>
       </div>
     </section>
-    <section id="dashboardView" class="hidden">
+    <section id="authView" class="auth-screen">
       <div class="section-heading"><div><div class="eyebrow">PERSONAL WORKSPACE</div><h2>Dashboard <span class="accent">Pengguna</span></h2><p>Halo, <strong id="userName">Pengguna</strong>.</p></div><button class="btn btn-outline" id="logoutBtn">Keluar ↗</button></div>
       <div class="dashboard-grid">
         <article class="metric-card balance-card"><div class="metric-top"><span>Saldo tersedia</span><span>◈</span></div><strong id="balanceValue">Rp0</strong><small>Penyesuaian saldo dicatat admin.</small></article>
@@ -53,6 +53,6 @@
     </section>
   </main>
   <footer class="footer"><span>© <span id="year"></span> RAYYGMAIL · Gunakan layanan dengan bijak.</span></footer>
-  <?!= include('App'); ?>
+  <script src="/App.js"></script>
 </body>
 </html>
