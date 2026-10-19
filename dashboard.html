@@ -1,0 +1,102 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RAYYGMAIL — Dashboard</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <header class="topbar">
+    <a class="brand" href="/dashboard"><span class="brand-icon">✉</span>
+      <span>RAYY<span class="accent">GMAIL</span><small>USER WORKSPACE</small></span>
+    </a>
+    <div class="top-actions">
+      <span class="secure-label">PENGGUNA</span>
+      <button class="btn btn-outline" id="logoutBtn">Keluar ↗</button>
+    </div>
+  </header>
+
+  <main class="container page-content">
+    <section class="section-heading">
+      <div>
+        <div class="eyebrow">PERSONAL WORKSPACE</div>
+        <h1>Dashboard <span class="accent">Pengguna</span></h1>
+        <p>Halo, <strong id="userName">Pengguna</strong>. Berikut ringkasan akunmu.</p>
+      </div>
+      <button class="btn btn-outline" id="refreshBtn">↻ Muat ulang</button>
+    </section>
+
+    <section class="dashboard-grid">
+      <article class="metric-card balance-card">
+        <div class="metric-top"><span>Saldo tersedia</span><span>◈</span></div>
+        <strong id="balanceValue">Rp0</strong>
+        <small>Penyesuaian saldo dicatat admin.</small>
+      </article>
+      <article class="metric-card">
+        <div class="metric-top"><span>Total pengajuan</span><span>▤</span></div>
+        <strong id="submissionCount">0</strong>
+        <small>Seluruh pengajuan kamu.</small>
+      </article>
+      <article class="metric-card">
+        <div class="metric-top"><span>Disetujui</span><span>✓</span></div>
+        <strong id="approvedCount">0</strong>
+        <small>Pengajuan selesai diperiksa.</small>
+      </article>
+    </section>
+
+    <section class="workspace-grid">
+      <div class="panel">
+        <div class="panel-heading"><div><h2>Buat pengajuan</h2><p>Isi informasi yang diperlukan saja.</p></div></div>
+        <form id="submissionForm">
+          <label>Jenis pengajuan
+            <select id="submissionType">
+              <option>Setoran Gmail</option>
+              <option>Pertanyaan layanan</option>
+            </select>
+          </label>
+          <label>ID referensi / email kontak
+            <input id="submissionReference" maxlength="180" required placeholder="ID referensi atau email kontak">
+          </label>
+          <label>Catatan tambahan <span class="optional">Opsional</span>
+            <textarea id="submissionNote" maxlength="500" rows="3" placeholder="Jelaskan kebutuhanmu tanpa data rahasia"></textarea>
+          </label>
+          <div class="warning-note">⚠ Jangan masukkan kata sandi Gmail, OTP, atau kode pemulihan.</div>
+          <button class="btn btn-primary btn-wide" type="submit">Kirim pengajuan →</button>
+        </form>
+        <p class="message" id="submissionMessage" role="status"></p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-heading"><div><h2>Aktivitas terbaru</h2><p>Status pengajuan terkini.</p></div></div>
+        <div id="recentActivity" class="activity-list">
+          <div class="empty-state">Memuat aktivitas…</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel table-panel">
+      <div class="panel-heading"><div><h2>Riwayat pengajuan</h2><p>Daftar pengajuan yang pernah dikirim.</p></div></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Tanggal</th><th>Jenis</th><th>Referensi</th><th>Status</th><th>Catatan admin</th></tr></thead>
+        <tbody id="submissionRows"></tbody>
+      </table></div>
+    </section>
+
+    <section class="panel table-panel">
+      <div class="panel-heading"><div><h2>Riwayat saldo</h2><p>Catatan transaksi yang dibuat admin.</p></div></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Nominal</th><th>Status</th></tr></thead>
+        <tbody id="transactionRows"></tbody>
+      </table></div>
+    </section>
+  </main>
+
+  <footer class="footer">© <span id="year"></span> RAYYGMAIL · Workspace pengguna.</footer>
+  <script src="/app.js"></script>
+</body>
+</html>
