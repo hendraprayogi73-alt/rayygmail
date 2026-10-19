@@ -1,11 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1d4ed8">
   <title>RAYYGMAIL — Admin</title>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/admin.css">
 </head>
 <body>
   <div class="ambient ambient-one"></div>
@@ -25,7 +25,7 @@
     <section class="section-heading">
       <div><div class="eyebrow">CONTROL CENTER</div>
         <h1>Panel <span class="accent">Admin</span></h1>
-        <p>Kelola pengajuan, pengguna, dan catatan saldo.</p>
+        <p>Kelola pengajuan, pengguna, penarikan, dan catatan saldo.</p>
       </div>
       <button class="btn btn-outline" id="refreshBtn">↻ Muat ulang</button>
     </section>
@@ -41,6 +41,14 @@
       <div class="table-wrap"><table>
         <thead><tr><th>Tanggal</th><th>Pengguna</th><th>Jenis</th><th>Referensi</th><th>Catatan pengguna</th><th>Status</th><th>Catatan admin</th><th>Aksi</th></tr></thead>
         <tbody id="adminSubmissionRows"></tbody>
+      </table></div>
+    </section>
+
+    <section class="panel table-panel">
+      <div class="panel-heading"><div><h2>Penarikan saldo</h2><p>Proses permintaan penarikan. Jika ditolak, saldo pengguna dikembalikan otomatis.</p></div></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Tanggal</th><th>Pengguna</th><th>E-wallet</th><th>Nominal</th><th>Status</th><th>Catatan admin</th><th>Aksi</th></tr></thead>
+        <tbody id="adminWithdrawalRows"></tbody>
       </table></div>
     </section>
 
