@@ -2,7 +2,7 @@
 'use strict';
 
 // Ganti dengan URL Web App Google Apps Script milikmu.
-const API_URL = 'https://script.google.com/macros/s/AKfycby01evxtQAPrHK2WihDczhxapnR-e_sCEtgMVXpeAmpRYyi3FreuKD-tc1FKknZpToX/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxomM9CziJiuA_2TI5S0kqaTqHuhrWjWPYt_Um6OpLtNDTY4co-Qtw4k5XhccI_1x8n/exec';
 
 const $ = id => document.getElementById(id);
 const TOKEN_KEY = 'rayygmail_session';
