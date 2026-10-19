@@ -1,102 +1,168 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1d4ed8">
   <title>RAYYGMAIL — Dashboard</title>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/dashboard.css">
 </head>
-<body>
-  <div class="ambient ambient-one"></div>
-  <div class="ambient ambient-two"></div>
-
-  <header class="topbar">
-    <a class="brand" href="/dashboard"><span class="brand-icon">✉</span>
-      <span>RAYY<span class="accent">GMAIL</span><small>USER WORKSPACE</small></span>
-    </a>
-    <div class="top-actions">
-      <span class="secure-label">PENGGUNA</span>
-      <button class="btn btn-outline" id="logoutBtn">Keluar ↗</button>
+<body class="rx">
+  <header class="rx-top">
+    <a class="rx-brand" href="/dashboard"><span class="rx-logo">✉</span><span>RAYY<b>GMAIL</b></span></a>
+    <div class="rx-top-actions">
+      <button class="chip" id="refreshBtn" type="button">⟳ Segarkan</button>
     </div>
   </header>
 
-  <main class="container page-content">
-    <section class="section-heading">
-      <div>
-        <div class="eyebrow">PERSONAL WORKSPACE</div>
-        <h1>Dashboard <span class="accent">Pengguna</span></h1>
-        <p>Halo, <strong id="userName">Pengguna</strong>. Berikut ringkasan akunmu.</p>
+  <main class="rx-main">
+
+    <!-- BERANDA -->
+    <section class="view active" data-view="home">
+      <div class="balance-card">
+        <p class="bc-label">Saldo anda</p>
+        <h1 class="bc-value js-balance">Rp0</h1>
+        <p class="bc-sub">Halo, <span id="userName">-</span></p>
+        <div class="bc-actions">
+          <button class="chip chip-light" type="button" data-go="balance">⭳ Tarik saldo</button>
+          <button class="chip chip-light" type="button" data-go="history">↺ Riwayat</button>
+        </div>
       </div>
-      <button class="btn btn-outline" id="refreshBtn">↻ Muat ulang</button>
+
+      <div class="card quick-menu">
+        <button type="button" data-go="deposit"><span class="qi qi-blue">➤</span>Stor</button>
+        <button type="button" data-go="history"><span class="qi qi-green">↺</span>Riwayat</button>
+        <button type="button" data-go="balance"><span class="qi qi-orange">▣</span>Saldo</button>
+        <button type="button" data-go="profile"><span class="qi qi-purple">☺</span>Profil</button>
+      </div>
+
+      <div class="stat-grid">
+        <div class="card stat"><small>Diterima</small><strong id="statApproved">0</strong></div>
+        <div class="card stat"><small>Menunggu</small><strong id="statPending">0</strong></div>
+        <div class="card stat"><small>Diproses</small><strong id="statProcess">0</strong></div>
+        <div class="card stat"><small>Ditolak</small><strong id="statRejected">0</strong></div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Aktivitas terbaru</h2>
+        <div id="recentActivity"></div>
+      </div>
     </section>
 
-    <section class="dashboard-grid">
-      <article class="metric-card balance-card">
-        <div class="metric-top"><span>Saldo tersedia</span><span>◈</span></div>
-        <strong id="balanceValue">Rp0</strong>
-        <small>Penyesuaian saldo dicatat admin.</small>
-      </article>
-      <article class="metric-card">
-        <div class="metric-top"><span>Total pengajuan</span><span>▤</span></div>
-        <strong id="submissionCount">0</strong>
-        <small>Seluruh pengajuan kamu.</small>
-      </article>
-      <article class="metric-card">
-        <div class="metric-top"><span>Disetujui</span><span>✓</span></div>
-        <strong id="approvedCount">0</strong>
-        <small>Pengajuan selesai diperiksa.</small>
-      </article>
+    <!-- RIWAYAT -->
+    <section class="view" data-view="history">
+      <div class="card">
+        <h2 class="card-title">Riwayat pengajuan</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tanggal</th><th>Jenis</th><th>Referensi</th><th>Status</th><th>Catatan admin</th></tr></thead>
+            <tbody id="submissionRows"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <h2 class="card-title">Riwayat transaksi</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Nominal</th><th>Status</th></tr></thead>
+            <tbody id="transactionRows"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
-    <section class="workspace-grid">
-      <div class="panel">
-        <div class="panel-heading"><div><h2>Buat pengajuan</h2><p>Isi informasi yang diperlukan saja.</p></div></div>
-        <form id="submissionForm">
+    <!-- STOR -->
+    <section class="view" data-view="deposit">
+      <div class="card">
+        <h2 class="card-title">Kirim pengajuan</h2>
+        <p class="muted">Isi referensi pengajuan Anda. Jangan kirim kata sandi, OTP, atau kode pemulihan.</p>
+        <form id="submissionForm" class="form">
           <label>Jenis pengajuan
             <select id="submissionType">
               <option>Setoran Gmail</option>
               <option>Pertanyaan layanan</option>
             </select>
           </label>
-          <label>ID referensi / email kontak
-            <input id="submissionReference" maxlength="180" required placeholder="ID referensi atau email kontak">
+          <label>Referensi
+            <input id="submissionReference" maxlength="180" required placeholder="Nomor atau kode referensi">
           </label>
-          <label>Catatan tambahan <span class="optional">Opsional</span>
-            <textarea id="submissionNote" maxlength="500" rows="3" placeholder="Jelaskan kebutuhanmu tanpa data rahasia"></textarea>
+          <label>Catatan (opsional)
+            <textarea id="submissionNote" maxlength="500" rows="3" placeholder="Catatan tambahan"></textarea>
           </label>
-          <div class="warning-note">⚠ Jangan masukkan kata sandi Gmail, OTP, atau kode pemulihan.</div>
-          <button class="btn btn-primary btn-wide" type="submit">Kirim pengajuan →</button>
+          <button class="btn" type="submit">Kirim pengajuan</button>
         </form>
         <p class="message" id="submissionMessage" role="status"></p>
       </div>
+    </section>
 
-      <div class="panel">
-        <div class="panel-heading"><div><h2>Aktivitas terbaru</h2><p>Status pengajuan terkini.</p></div></div>
-        <div id="recentActivity" class="activity-list">
-          <div class="empty-state">Memuat aktivitas…</div>
+    <!-- SALDO -->
+    <section class="view" data-view="balance">
+      <div class="balance-card bc-alt">
+        <p class="bc-label">Saldo saat ini</p>
+        <h1 class="bc-value js-balance">Rp0</h1>
+        <p class="bc-info" id="balanceInfo"></p>
+      </div>
+
+      <div class="card status-row" id="withdrawStatus">Status penarikan: <b>-</b></div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2 class="card-title">Nomor e-wallet tersimpan</h2>
+          <span class="badge" id="walletBadge">Belum diisi</span>
+        </div>
+        <div class="provider-tabs">
+          <button type="button" class="provider-btn active" data-provider="DANA">DANA</button>
+          <button type="button" class="provider-btn" data-provider="OVO">OVO</button>
+          <button type="button" class="provider-btn" data-provider="GoPay">GoPay</button>
+        </div>
+        <p class="muted" id="walletHint">Simpan nomor agar tidak perlu mengetik ulang. Hanya angka, 10–15 digit.</p>
+        <form id="walletForm" class="inline-form">
+          <input id="walletNumber" inputmode="numeric" maxlength="15" placeholder="081234567890" required>
+          <button class="btn" type="submit">Simpan</button>
+        </form>
+        <p class="message" id="walletMessage" role="status"></p>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Tarik saldo</h2>
+        <form id="withdrawForm" class="inline-form">
+          <input id="withdrawAmount" type="number" inputmode="numeric" min="1" step="1" required placeholder="Nominal (Rp)">
+          <button class="btn" id="withdrawBtn" type="submit">Tarik saldo</button>
+        </form>
+        <p class="message" id="withdrawMessage" role="status"></p>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Riwayat penarikan</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tanggal</th><th>E-wallet</th><th>Nominal</th><th>Status</th><th>Catatan</th></tr></thead>
+            <tbody id="withdrawalRows"></tbody>
+          </table>
         </div>
       </div>
     </section>
 
-    <section class="panel table-panel">
-      <div class="panel-heading"><div><h2>Riwayat pengajuan</h2><p>Daftar pengajuan yang pernah dikirim.</p></div></div>
-      <div class="table-wrap"><table>
-        <thead><tr><th>Tanggal</th><th>Jenis</th><th>Referensi</th><th>Status</th><th>Catatan admin</th></tr></thead>
-        <tbody id="submissionRows"></tbody>
-      </table></div>
-    </section>
-
-    <section class="panel table-panel">
-      <div class="panel-heading"><div><h2>Riwayat saldo</h2><p>Catatan transaksi yang dibuat admin.</p></div></div>
-      <div class="table-wrap"><table>
-        <thead><tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Nominal</th><th>Status</th></tr></thead>
-        <tbody id="transactionRows"></tbody>
-      </table></div>
+    <!-- PROFIL -->
+    <section class="view" data-view="profile">
+      <div class="card">
+        <h2 class="card-title">Profil</h2>
+        <div class="profile-row"><small>Nama</small><strong id="profileName">-</strong></div>
+        <div class="profile-row"><small>Email</small><strong id="profileEmail">-</strong></div>
+        <div class="profile-row"><small>Total pengajuan</small><strong id="profileTotal">0</strong></div>
+        <button class="btn btn-danger" id="logoutBtn" type="button">Keluar</button>
+      </div>
     </section>
   </main>
 
-  <footer class="footer">© <span id="year"></span> RAYYGMAIL · Workspace pengguna.</footer>
+  <nav class="bottom-nav" aria-label="Navigasi utama">
+    <button type="button" data-nav="home" class="active"><span>⌂</span>Beranda</button>
+    <button type="button" data-nav="history"><span>↺</span>Riwayat</button>
+    <button type="button" data-nav="deposit" class="fab-wrap"><span class="fab">➤</span><em>Stor</em></button>
+    <button type="button" data-nav="balance"><span>▣</span>Saldo</button>
+    <button type="button" data-nav="profile"><span>☺</span>Profil</button>
+  </nav>
+
   <script src="/app.js"></script>
 </body>
 </html>
