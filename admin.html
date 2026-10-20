@@ -136,19 +136,22 @@
 
       async function run(action, data) {
         say('Memproses…');
+        var ok = true;
         try {
           var d = await api(action, Object.assign({ token: getToken() }, data));
           say(d.message);
         } catch (e) {
           say(e.message, true);
+          ok = false;
         }
         await load();
         // saldo/transaksi berubah saat klaim disetujui
         var rb = document.getElementById('refreshBtn');
         if (rb && action === 'adminJobClaimUpdate') rb.click();
+        return ok;
       }
 
-      root.addEventListener('click', function (e) {
+      root.addEventListener('click', async function (e) {
         var t = e.target;
         if (t.getAttribute('data-all')) return run('adminJobSetStatus', { jobId: 'all', status: t.getAttribute('data-all') });
         if (t.getAttribute('data-claim')) return run('adminJobClaimUpdate', { id: t.getAttribute('data-claim'), status: t.getAttribute('data-st') });
@@ -156,14 +159,18 @@
         if (!act) return;
         var box = t.closest('.jb-box');
         var id = box.getAttribute('data-job');
-        if (act === 'save') run('adminJobSave', {
+        var saveData = {
           jobId: id, name: box.querySelector('.f-name').value,
           price: Number(box.querySelector('.f-price').value),
           maxPerClaim: Number(box.querySelector('.f-max').value),
           instruction: box.querySelector('.f-instruction').value
-        });
-        else if (act === 'add') run('adminJobAddEmails', { jobId: id, emails: box.querySelector('.f-emails').value });
-        else if (act === 'rmemails') run('adminJobRemoveEmails', { jobId: id, mode: 'list', emails: box.querySelector('.f-rmemails').value });
+        };
+        var addText = box.querySelector('.f-emails').value;
+        var rmText = box.querySelector('.f-rmemails').value;
+        // Isian kotak (harga, nama, teks) disimpan dulu supaya tidak hilang saat panel dimuat ulang.
+        if (act === 'save') run('adminJobSave', saveData);
+        else if (act === 'add') { if (await run('adminJobSave', saveData)) run('adminJobAddEmails', { jobId: id, emails: addText }); }
+        else if (act === 'rmemails') run('adminJobRemoveEmails', { jobId: id, mode: 'list', emails: rmText });
         else if (act === 'rmall') {
           if (confirm('Hapus SEMUA email yang masih tersedia di ' + id.toUpperCase() + '? Email yang sudah diambil user tidak ikut terhapus.')) {
             run('adminJobRemoveEmails', { jobId: id, mode: 'allAvailable' });
@@ -174,10 +181,12 @@
             run('adminJobDelete', { jobId: id });
           }
         }
-        else run('adminJobSetStatus', { jobId: id, status: act });
+        else { if (await run('adminJobSave', saveData)) run('adminJobSetStatus', { jobId: id, status: act }); }
       });
 
       document.getElementById('newJobBtn').addEventListener('click', async function () {
+        if (!(Number(document.getElementById('newJobPrice').value) > 0) &&
+            !confirm('Harga masih 0, user tidak bisa mengambil job ini sampai harga diisi. Lanjut tambah job?')) return;
         await run('adminJobCreate', {
           name: document.getElementById('newJobName').value,
           price: Number(document.getElementById('newJobPrice').value),
