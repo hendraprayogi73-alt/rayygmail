@@ -124,6 +124,12 @@
       padding:10px 16px;border-radius:999px;font-size:13px;z-index:60;opacity:0;pointer-events:none;transition:opacity .2s;
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .jb-toast.show{opacity:1}
+
+    /* Setoran hasil job */
+    .jb-deposit{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:18px;background:#fff}
+    .jb-deposit textarea{width:100%;min-height:120px;margin:8px 0;padding:10px;border:1px solid var(--line);border-radius:12px;
+      font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;resize:vertical;box-sizing:border-box;background:#f8fafc;color:var(--ink)}
+    .jb-deposit textarea:focus{outline:2px solid #93c5fd;background:#fff}
   </style>
 
   <div id="jobBoard">
@@ -149,6 +155,7 @@
     var openId = '';
     var autoOpened = false;
     var qty = {};
+    var deposit = {};
     var data = null;
     var lastJson = '';
     var internalClick = false;
@@ -178,6 +185,26 @@
         (val ? ' data-val="' + escapeHtml(val) + '"' : '') + '>' + label + '</button>';
     }
 
+    // ----- Setoran hasil job -----
+    function countLines(t) {
+      return String(t || '').split(/[\s,;]+/).filter(Boolean).length;
+    }
+    function depEst(ac, n) {
+      return n ? n + ' × ' + money(ac.price) + ' = ' + money(n * ac.price) + ' jika di-ACC'
+               : 'Total pengambilan: ' + ac.qty + ' email';
+    }
+    function depositHtml(ac) {
+      var draft = deposit[ac.id] || '';
+      var n = countLines(draft);
+      return '<div class="jb-deposit"><strong>📤 Setor hasil job ke admin</strong>' +
+        '<p class="muted">Tempel Gmail yang sudah selesai dikerjakan, satu per baris. Hanya Gmail dari pengambilan ini yang diterima.</p>' +
+        '<textarea id="depText" data-claim="' + escapeHtml(ac.id) + '" placeholder="a@gmail.com&#10;b@gmail.com">' + escapeHtml(draft) + '</textarea>' +
+        '<div class="jb-listhead"><small>Terdeteksi: <b id="depCount">' + n + '</b> baris</small>' +
+        '<small id="depEst">' + escapeHtml(depEst(ac, n)) + '</small></div>' +
+        btn('deposit', '➤ Kirim Setoran', 'primary') +
+        '<p class="muted">Upah masuk ke saldo setelah admin menyetujui. Gmail yang tidak disetor tidak dibayar.</p></div>';
+    }
+
     function claimHtml(ac) {
       var instr = ac.instruction || '';
       var left = ac.emails.filter(function (e) { return !copied[e]; }).length;
@@ -199,7 +226,7 @@
         (instr ? btn('copy-text', ICON + ' Salin teks job', '') : '') +
         btn('copy-all', ICON + ' Salin semua teks (job + Gmail)', '') +
         (ac.status === 'Diambil'
-          ? btn('finish', '✓ Tandai selesai', 'success', ac.id)
+          ? depositHtml(ac) + btn('finish', '✓ Tandai selesai (setor semua)', 'success', ac.id)
           : '<div class="jb-notice jb-info">Menunggu pemeriksaan admin.</div>');
     }
 
@@ -308,6 +335,18 @@
       }
     }
 
+    // Penghitung baris setoran diperbarui langsung tanpa render ulang (fokus tidak hilang).
+    document.getElementById('jobBoard').addEventListener('input', function (e) {
+      if (e.target.id !== 'depText') return;
+      deposit[e.target.getAttribute('data-claim')] = e.target.value;
+      var n = countLines(e.target.value);
+      var c = document.getElementById('depCount');
+      var s = document.getElementById('depEst');
+      var ac = (data && openId) ? activeClaim(data, openId) : null;
+      if (c) c.textContent = n;
+      if (s && ac) s.textContent = depEst(ac, n);
+    });
+
     document.getElementById('jobBoard').addEventListener('click', async function (e) {
       var el = e.target.closest('[data-act]');
       if (!el) return;
@@ -335,6 +374,30 @@
       if (act === 'copy-all' && ac) {
         var txt = (ac.instruction ? ac.instruction + '\n\n' : '') + ac.emails.join('\n');
         return doCopy(txt, 'Semua teks disalin', ac.emails);
+      }
+
+      // Kirim setoran: hanya Gmail yang sudah dikerjakan
+      if (act === 'deposit' && ac) {
+        var listText = (deposit[ac.id] || '').trim();
+        var n = countLines(listText);
+        if (!n) { toast('Tempel Gmail yang sudah dikerjakan.'); return; }
+        var rest = ac.qty - n;
+        var ask = 'Kirim setoran ' + n + ' email ke admin?' +
+          (rest > 0 ? '\n\n' + rest + ' email lainnya dianggap tidak dikerjakan: tidak dibayar dan tidak bisa disetor lagi.' : '');
+        if (!confirm(ask)) return;
+        el.disabled = true;
+        try {
+          var dr = await api('jobFinish', { token: getToken(), id: ac.id, emails: listText });
+          delete deposit[ac.id];
+          toast(dr.message || 'Setoran terkirim');
+          say('');
+        } catch (err) {
+          say(err.message, true);
+          toast(err.message);
+        }
+        await load();
+        refreshAll();
+        return;
       }
 
       if (act === 'claim' || act === 'finish') {
