@@ -68,7 +68,7 @@
         <h3 style="margin:0 0 10px">Tambah job baru</h3>
         <div class="jb-grid">
           <label>Nama job<input id="newJobName" maxlength="40" placeholder="Kosongkan = otomatis"></label>
-          <label>Harga per email (Rp)<input id="newJobPrice" type="number" min="0" value="0"></label>
+          <label>Harga per email<input id="newJobPrice" type="text" inputmode="numeric" autocomplete="off" placeholder="Rp 1,500"></label>
           <label>Maks email per pengambilan<input id="newJobMax" type="number" min="1" max="100" value="10"></label>
         </div>
         <label>Teks job<textarea id="newJobText" maxlength="3000" placeholder="Perintah yang harus dikerjakan user"></textarea></label>
@@ -91,6 +91,26 @@
       var msg = document.getElementById('jobAdminMsg');
       function say(t, err) { msg.textContent = t || ''; msg.className = 'message' + (err ? ' error' : ''); }
 
+      // ----- Input harga manual: "Rp 1,500" -----
+      function fmtRp(v) {
+        var d = String(v == null ? '' : v).replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+        if (!d) return '';
+        return 'Rp ' + d.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      }
+      function numRp(v) { return Number(String(v == null ? '' : v).replace(/\D/g, '')) || 0; }
+      function liveRp(el) {
+        var raw = el.value;
+        var right = raw.slice(el.selectionStart || 0).replace(/\D/g, '').length;
+        el.value = fmtRp(raw);
+        var v = el.value, i = v.length, cnt = 0;
+        while (i > 0 && cnt < right) { i--; if (/\d/.test(v.charAt(i))) cnt++; }
+        try { el.setSelectionRange(i, i); } catch (_) {}
+      }
+      root.addEventListener('input', function (e) {
+        var t = e.target;
+        if (t.classList.contains('f-price') || t.id === 'newJobPrice') liveRp(t);
+      });
+
       function render(d) {
         document.getElementById('jobAdminBoxes').innerHTML = d.jobs.map(function (j) {
           return '<div class="jb-box" data-job="' + j.id + '">' +
@@ -99,7 +119,7 @@
             '<p class="jb-stock">Total ' + j.total + ' · Tersedia ' + j.available + ' · Diambil ' + j.taken + ' · Selesai ' + j.done + ' · Ditolak ' + j.rejected + '</p>' +
             (j.price <= 0 ? '<p class="message error">Harga belum diisi: user tidak bisa mengambil job ini.</p>' : '') +
             '<label>Nama job<input class="f-name" maxlength="40" value="' + escapeHtml(j.name) + '"></label>' +
-            '<label>Harga per email (Rp)<input class="f-price" type="number" min="0" value="' + j.price + '"></label>' +
+            '<label>Harga per email<input class="f-price" type="text" inputmode="numeric" autocomplete="off" placeholder="Rp 1,500" value="' + (j.price > 0 ? fmtRp(j.price) : '') + '"></label>' +
             '<label>Maks email per pengambilan<input class="f-max" type="number" min="1" max="100" value="' + j.maxPerClaim + '"></label>' +
             '<label>Teks job (tampil ke user setelah klik Ambil Job)<textarea class="f-instruction" maxlength="3000" style="min-height:120px" placeholder="Tulis perintah/teks yang harus dikerjakan user">' + escapeHtml(j.instruction || '') + '</textarea></label>' +
             '<div class="jb-actions" style="margin-bottom:14px">' +
@@ -161,7 +181,7 @@
         var id = box.getAttribute('data-job');
         var saveData = {
           jobId: id, name: box.querySelector('.f-name').value,
-          price: Number(box.querySelector('.f-price').value),
+          price: numRp(box.querySelector('.f-price').value),
           maxPerClaim: Number(box.querySelector('.f-max').value),
           instruction: box.querySelector('.f-instruction').value
         };
@@ -185,11 +205,11 @@
       });
 
       document.getElementById('newJobBtn').addEventListener('click', async function () {
-        if (!(Number(document.getElementById('newJobPrice').value) > 0) &&
+        if (!(numRp(document.getElementById('newJobPrice').value) > 0) &&
             !confirm('Harga masih 0, user tidak bisa mengambil job ini sampai harga diisi. Lanjut tambah job?')) return;
         await run('adminJobCreate', {
           name: document.getElementById('newJobName').value,
-          price: Number(document.getElementById('newJobPrice').value),
+          price: numRp(document.getElementById('newJobPrice').value),
           maxPerClaim: Number(document.getElementById('newJobMax').value),
           instruction: document.getElementById('newJobText').value
         });
