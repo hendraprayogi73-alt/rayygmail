@@ -4,273 +4,614 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#1d4ed8">
-  <title>RAYYGMAIL — Admin</title>
-  <link rel="stylesheet" href="/admin.css">
+  <title>RAYYGMAIL — Dashboard</title>
+  <link rel="stylesheet" href="/dashboard.css">
 </head>
-<body>
-  <div class="ambient ambient-one"></div>
-  <div class="ambient ambient-two"></div>
-
-  <header class="topbar">
-    <a class="brand" href="/admin"><span class="brand-icon">✉</span>
-      <span>RAYY<span class="accent">GMAIL</span><small>ADMIN CONSOLE</small></span>
-    </a>
-    <div class="top-actions">
-      <span class="secure-label">ADMINISTRATOR</span>
-      <button class="btn btn-outline" id="logoutBtn">Keluar ↗</button>
+<body class="rx">
+  <header class="rx-top">
+    <a class="rx-brand" href="/dashboard"><span class="rx-logo">✉</span><span>RAYY<b>GMAIL</b></span></a>
+    <div class="rx-top-actions">
+      <button class="chip" id="refreshBtn" type="button">⟳ Segarkan</button>
     </div>
   </header>
 
-  <main class="container page-content">
-    <section class="section-heading">
-      <div><div class="eyebrow">CONTROL CENTER</div>
-        <h1>Panel <span class="accent">Admin</span></h1>
-        <p>Kelola pengajuan, pengguna, penarikan, dan catatan saldo.</p>
-      </div>
-      <button class="btn btn-outline" id="refreshBtn">↻ Muat ulang</button>
-    </section>
+  <main class="rx-main">
 
-    <section class="dashboard-grid">
-      <article class="metric-card"><div class="metric-top"><span>Total pengguna</span><span>♙</span></div><strong id="adminUserCount">0</strong></article>
-      <article class="metric-card"><div class="metric-top"><span>Total pengajuan</span><span>▤</span></div><strong id="adminSubmissionCount">0</strong></article>
-      <article class="metric-card balance-card"><div class="metric-top"><span>Menunggu pemeriksaan</span><span>◷</span></div><strong id="adminPendingCount">0</strong></article>
-    </section>
-
-    <section class="panel table-panel">
-      <div class="panel-heading"><div><h2>Pengajuan masuk</h2><p>Periksa data dan perbarui status pengajuan.</p></div></div>
-      <div class="table-wrap"><table>
-        <thead><tr><th>Tanggal</th><th>Pengguna</th><th>Jenis</th><th>Referensi</th><th>Catatan pengguna</th><th>Status</th><th>Catatan admin</th><th>Aksi</th></tr></thead>
-        <tbody id="adminSubmissionRows"></tbody>
-      </table></div>
-    </section>
-
-    <!-- ===== KONTROL JOB EMAIL (BARU) ===== -->
-    <style>
-      .jb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
-      .jb-box{border:1px solid var(--line);border-radius:16px;padding:16px}
-      .jb-box label{margin-bottom:10px}
-      .jb-box textarea{min-height:90px}
-      .jb-actions{display:flex;gap:8px;flex-wrap:wrap}
-      .jb-stock{font-size:12px;color:var(--muted);margin:0 0 10px}
-    </style>
-
-    <section class="panel table-panel" id="jobAdmin">
-      <div class="panel-heading">
-        <div><h2>Kontrol Job Email</h2><p>Isi stok, atur harga, teks job, buka/tutup, tambah, dan hapus tiap job.</p></div>
-        <div class="jb-actions">
-          <button class="btn btn-outline" data-all="OPEN">Buka semua</button>
-          <button class="btn btn-outline" data-all="CLOSE">Tutup semua</button>
+    <!-- BERANDA -->
+    <section class="view active" data-view="home">
+      <div class="balance-card">
+        <p class="bc-label">Saldo anda</p>
+        <h1 class="bc-value js-balance">Rp0</h1>
+        <p class="bc-sub">Hi, <span id="userName">-</span></p>
+        <div class="bc-actions">
+          <button class="chip chip-light" type="button" data-go="balance">⭳ Tarik saldo</button>
+          <button class="chip chip-light" type="button" data-go="history">↺ Riwayat</button>
         </div>
       </div>
 
-      <!-- TAMBAH JOB BARU -->
-      <div class="jb-box" style="margin-bottom:16px">
-        <h3 style="margin:0 0 10px">Tambah job baru</h3>
-        <div class="jb-grid">
-          <label>Nama job<input id="newJobName" maxlength="40" placeholder="Kosongkan = otomatis"></label>
-          <label>Harga per email<input id="newJobPrice" type="text" inputmode="numeric" autocomplete="off" placeholder="Rp 1,500"></label>
-          <label>Maks email per pengambilan<input id="newJobMax" type="number" min="1" max="100" value="10"></label>
-        </div>
-        <label>Teks job<textarea id="newJobText" maxlength="3000" placeholder="Perintah yang harus dikerjakan user"></textarea></label>
-        <button class="btn btn-primary" id="newJobBtn" type="button">+ Tambah job</button>
+      <div class="card quick-menu">
+        <button type="button" data-go="deposit"><span class="qi qi-blue">➤</span>Stor</button>
+        <button type="button" data-go="history"><span class="qi qi-green">↺</span>Riwayat</button>
+        <button type="button" data-go="balance"><span class="qi qi-orange">▣</span>Saldo</button>
+        <button type="button" data-go="profile"><span class="qi qi-purple">☺</span>Profil</button>
       </div>
 
-      <div class="jb-grid" id="jobAdminBoxes"></div>
-      <p class="message" id="jobAdminMsg" role="status"></p>
+      <div class="stat-grid">
+        <div class="card stat"><small>Diterima</small><strong id="statApproved">0</strong></div>
+        <div class="card stat"><small>Menunggu</small><strong id="statPending">0</strong></div>
+        <div class="card stat"><small>Diproses</small><strong id="statProcess">0</strong></div>
+        <div class="card stat"><small>Ditolak</small><strong id="statRejected">0</strong></div>
+      </div>
 
-      <h3 style="margin:22px 0 10px">Pengambilan job</h3>
-      <div class="table-wrap"><table>
-        <thead><tr><th>Tanggal</th><th>Pengguna</th><th>Job</th><th>Email</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
-        <tbody id="jobClaimRows"></tbody>
-      </table></div>
+      <div class="card">
+        <h2 class="card-title">Aktivitas terbaru</h2>
+        <div id="recentActivity"></div>
+      </div>
     </section>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      var root = document.getElementById('jobAdmin');
-      var msg = document.getElementById('jobAdminMsg');
-      function say(t, err) { msg.textContent = t || ''; msg.className = 'message' + (err ? ' error' : ''); }
+    <!-- RIWAYAT -->
+    <section class="view" data-view="history">
+      <div class="card">
+        <h2 class="card-title">Riwayat pengajuan</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tanggal</th><th>Jenis</th><th>Referensi</th><th>Status</th><th>Catatan admin</th></tr></thead>
+            <tbody id="submissionRows"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <h2 class="card-title">Riwayat transaksi</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Nominal</th><th>Status</th></tr></thead>
+            <tbody id="transactionRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
 
-      // ----- Input harga manual: "Rp 1,500" -----
-      function fmtRp(v) {
-        var d = String(v == null ? '' : v).replace(/\D/g, '').replace(/^0+(?=\d)/, '');
-        if (!d) return '';
-        return 'Rp ' + d.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-      }
-      function numRp(v) { return Number(String(v == null ? '' : v).replace(/\D/g, '')) || 0; }
-      function liveRp(el) {
-        var raw = el.value;
-        var right = raw.slice(el.selectionStart || 0).replace(/\D/g, '').length;
-        el.value = fmtRp(raw);
-        var v = el.value, i = v.length, cnt = 0;
-        while (i > 0 && cnt < right) { i--; if (/\d/.test(v.charAt(i))) cnt++; }
-        try { el.setSelectionRange(i, i); } catch (_) {}
-      }
-      root.addEventListener('input', function (e) {
-        var t = e.target;
-        if (t.classList.contains('f-price') || t.id === 'newJobPrice') liveRp(t);
-      });
+    
+<!-- JOB GMAIL -->
+<section class="view" data-view="deposit">
 
-      function render(d) {
-        document.getElementById('jobAdminBoxes').innerHTML = d.jobs.map(function (j) {
-          return '<div class="jb-box" data-job="' + j.id + '">' +
-            '<div class="panel-heading" style="margin-bottom:8px"><h2>' + j.id.toUpperCase() + '</h2>' +
-            '<span class="btn ' + (j.status === 'OPEN' ? 'btn-primary' : 'btn-outline') + '" style="cursor:default">' + j.status + '</span></div>' +
-            '<p class="jb-stock">Total ' + j.total + ' · Tersedia ' + j.available + ' · Diambil ' + j.taken + ' · Selesai ' + j.done + ' · Ditolak ' + j.rejected + '</p>' +
-            (j.price <= 0 ? '<p class="message error">Harga belum diisi: user tidak bisa mengambil job ini.</p>' : '') +
-            '<label>Nama job<input class="f-name" maxlength="40" value="' + escapeHtml(j.name) + '"></label>' +
-            '<label>Harga per email<input class="f-price" type="text" inputmode="numeric" autocomplete="off" placeholder="Rp 1,500" value="' + (j.price > 0 ? fmtRp(j.price) : '') + '"></label>' +
-            '<label>Maks email per pengambilan<input class="f-max" type="number" min="1" max="100" value="' + j.maxPerClaim + '"></label>' +
-            '<label>Teks job (tampil ke user setelah klik Ambil Job)<textarea class="f-instruction" maxlength="3000" style="min-height:120px" placeholder="Tulis perintah/teks yang harus dikerjakan user">' + escapeHtml(j.instruction || '') + '</textarea></label>' +
-            '<div class="jb-actions" style="margin-bottom:14px">' +
-            '<button class="btn btn-primary" data-act="save">Simpan</button>' +
-            '<button class="btn btn-outline" data-act="OPEN">Open</button>' +
-            '<button class="btn btn-outline" data-act="CLOSE">Close</button>' +
-            '<button class="btn btn-outline" data-act="delete">Hapus</button></div>' +
-            '<label>Tambah email (satu per baris)<textarea class="f-emails" placeholder="a@gmail.com&#10;b@gmail.com"></textarea></label>' +
-            '<button class="btn btn-primary btn-wide" data-act="add">Tambah ke ' + j.id.toUpperCase() + '</button>' +
-            '<label style="margin-top:14px">Hapus email (satu per baris)<textarea class="f-rmemails" placeholder="a@gmail.com&#10;b@gmail.com"></textarea></label>' +
-            '<div class="jb-actions">' +
-            '<button class="btn btn-outline" data-act="rmemails">Hapus email ini</button>' +
-            '<button class="btn btn-outline" data-act="rmall">Hapus semua email tersedia</button></div></div>';
-        }).join('') || '<p class="jb-stock">Belum ada job. Tambahkan job baru di atas.</p>';
+  <!-- ===== CARI JOB EMAIL (BARU) ===== -->
+  <style>
+    #jobBoard{padding-bottom:16px}
+    .jb-card{border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px;background:#fff}
+    .jb-card.off{opacity:.7}
+    .jb-card.open{border-color:#93c5fd;box-shadow:0 6px 18px rgba(37,99,235,.12)}
+    .jb-head{display:block;cursor:pointer;min-height:48px}
+    .jb-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+    .jb-title{font-size:16px}
+    .jb-sub{margin-top:4px;font-size:13px;color:var(--muted)}
+    .jb-price{color:#059669;font-weight:700}
+    .jb-chev{font-size:12px;font-weight:700;color:var(--blue);white-space:nowrap;padding:8px 12px;border-radius:999px;background:#eff6ff}
+    .jb-bar{height:8px;border-radius:99px;background:#e2e8f0;margin:10px 0 4px;overflow:hidden}
+    .jb-bar i{display:block;height:100%;background:linear-gradient(90deg,#f59e0b,#ef4444)}
+    .jb-detail{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+    .jb-card.open .jb-detail{display:block}
 
-        document.getElementById('jobClaimRows').innerHTML = d.claims.length ? d.claims.map(function (c) {
-          var open = c.status === 'Diambil' || c.status === 'Menunggu';
-          return '<tr><td>' + escapeHtml(dateText(c.createdAt)) + '</td><td>' + escapeHtml(c.userName) + '</td>' +
-            '<td>' + c.jobId.toUpperCase() + '</td><td style="word-break:break-all;white-space:pre-wrap">' + c.emails.map(escapeHtml).join('\n') + '</td>' +
-            '<td>' + money(c.total) + '</td><td><span class="' + statusClass(c.status) + '">' + escapeHtml(c.status) + '</span></td><td>' +
-            (open ? '<button class="btn btn-primary" data-claim="' + c.id + '" data-st="Disetujui">Setujui</button> ' +
-                    '<button class="btn btn-outline" data-claim="' + c.id + '" data-st="Ditolak">Tolak</button>' : '') +
-            '</td></tr>';
-        }).join('') : '<tr><td colspan="7">Belum ada pengambilan.</td></tr>';
-      }
+    .jb-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:54px;margin-top:10px;
+      border-radius:16px;border:1px solid #bfdbfe;background:#eff6ff;color:#1e3a8a;font-weight:700;font-size:15px;cursor:pointer}
+    .jb-btn:active{transform:scale(.99)}
+    .jb-btn.primary{border-color:transparent;color:#fff;background:linear-gradient(135deg,var(--blue),var(--blue2));box-shadow:0 10px 22px rgba(37,99,235,.28)}
+    .jb-btn.success{border-color:transparent;color:#fff;background:linear-gradient(135deg,#059669,#34d399);box-shadow:0 10px 22px rgba(5,150,105,.25)}
+    .jb-btn:disabled{opacity:.55;cursor:not-allowed}
 
-      async function load() {
-        try {
-          render(await api('adminJobOverview', { token: getToken() }));
-        } catch (e) {
-          say(e.message, true);
+    .jb-notice{background:#fffbeb;border:1px solid #fde68a;border-radius:16px;padding:12px 14px;color:#92400e;font-size:13px}
+    .jb-notice b{display:block;margin-bottom:6px}
+    .jb-notice pre{margin:0;white-space:pre-wrap;word-break:break-word;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;color:#78350f}
+    .jb-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;margin-top:10px}
+
+    .jb-listbox{border:1px solid var(--line);border-radius:18px;padding:12px;margin-top:12px;background:#fff}
+    .jb-listhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+    .jb-listhead small{color:var(--muted)}
+    .jb-list{max-height:340px;overflow-y:auto;display:grid;gap:8px;padding-right:4px}
+    .jb-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:#f1f5f9;border-radius:12px;padding:12px;min-height:50px;cursor:pointer;color:var(--ink)}
+    .jb-item:active{background:#dbeafe}
+    .jb-item svg{flex:none;color:#475569}
+    .jb-item code{flex:1;font:13px ui-monospace,Menlo,Consolas,monospace;word-break:break-all}
+    .jb-pill{flex:none;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#fff;border:1px solid var(--line);white-space:nowrap}
+    .jb-pill.done{background:#dcfce7;border-color:#bbf7d0;color:#166534}
+
+    .jb-stepper{display:flex;align-items:center;justify-content:center;gap:16px;margin:4px 0 2px}
+    .jb-stepper button{width:52px;height:52px;border-radius:14px;border:1px solid var(--line);background:#fff;font-size:24px;font-weight:700;cursor:pointer;color:var(--ink)}
+    .jb-stepper button:active{background:#eff6ff}
+    .jb-stepper strong{min-width:56px;text-align:center;font-size:24px}
+
+    .jb-toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);max-width:90vw;background:#0f172a;color:#fff;
+      padding:10px 16px;border-radius:999px;font-size:13px;z-index:60;opacity:0;pointer-events:none;transition:opacity .2s;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .jb-toast.show{opacity:1}
+
+    /* Setoran hasil job */
+    .jb-deposit{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:18px;background:#fff}
+    .jb-deposit textarea{width:100%;min-height:120px;margin:8px 0;padding:10px;border:1px solid var(--line);border-radius:12px;
+      font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;resize:vertical;box-sizing:border-box;background:#f8fafc;color:var(--ink)}
+    .jb-deposit textarea:focus{outline:2px solid #93c5fd;background:#fff}
+  </style>
+
+  <div id="jobBoard">
+    <div class="card">
+      <h2 class="card-title">Cari Job Email</h2>
+      <p class="muted">Ketuk job untuk melihat detail, lalu tekan Ambil Job.</p>
+      <div id="jobCards"><p class="muted">Memuat…</p></div>
+      <p class="message" id="jobBoardMsg" role="status"></p>
+    </div>
+    <div class="card">
+      <h2 class="card-title">Riwayat job saya</h2>
+      <div id="myJobClaims"></div>
+    </div>
+  </div>
+  <div class="jb-toast" id="jbToast" role="status"></div>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var msg = document.getElementById('jobBoardMsg');
+    var toastEl = document.getElementById('jbToast');
+    var rb = document.getElementById('refreshBtn');
+    var toastTimer = 0;
+    var openId = '';
+    var autoOpened = false;
+    var qty = {};
+    var deposit = {};
+    var data = null;
+    var lastJson = '';
+    var internalClick = false;
+    var copied = loadCopied();
+
+    var ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+
+    function loadCopied() {
+      try { return JSON.parse(localStorage.getItem('jb_copied_v1') || '{}') || {}; } catch (_) { return {}; }
+    }
+    function saveCopied() {
+      try { localStorage.setItem('jb_copied_v1', JSON.stringify(copied)); } catch (_) {}
+    }
+    function toast(t) {
+      toastEl.textContent = t;
+      toastEl.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 1800);
+    }
+    function say(t, err) { msg.textContent = t || ''; msg.className = 'message' + (err ? ' error' : ''); }
+    function isActive(c) { return c.status === 'Diambil' || c.status === 'Menunggu'; }
+    function activeClaim(d, jobId) {
+      return d.claims.filter(function (c) { return c.jobId === jobId && isActive(c); })[0] || null;
+    }
+    function btn(act, label, cls, val) {
+      return '<button type="button" class="jb-btn ' + (cls || '') + '" data-act="' + act + '"' +
+        (val ? ' data-val="' + escapeHtml(val) + '"' : '') + '>' + label + '</button>';
+    }
+
+    // ----- Setoran hasil job -----
+    function countLines(t) {
+      return String(t || '').split(/[\s,;]+/).filter(Boolean).length;
+    }
+    function depEst(ac, n) {
+      return n ? n + ' × ' + money(ac.price) + ' = ' + money(n * ac.price) + ' jika di-ACC'
+               : 'Total pengambilan: ' + ac.qty + ' email';
+    }
+    function depositHtml(ac) {
+      var draft = deposit[ac.id] || '';
+      var n = countLines(draft);
+      return '<div class="jb-deposit"><strong>📤 Setor hasil job ke admin</strong>' +
+        '<p class="muted">Tempel Gmail yang sudah selesai dikerjakan, satu per baris. Hanya Gmail dari pengambilan ini yang diterima.</p>' +
+        '<textarea id="depText" data-claim="' + escapeHtml(ac.id) + '" placeholder="a@gmail.com&#10;b@gmail.com">' + escapeHtml(draft) + '</textarea>' +
+        '<div class="jb-listhead"><small>Terdeteksi: <b id="depCount">' + n + '</b> baris</small>' +
+        '<small id="depEst">' + escapeHtml(depEst(ac, n)) + '</small></div>' +
+        btn('deposit', '➤ Kirim Setoran', 'primary') +
+        '<p class="muted">Upah masuk ke saldo setelah admin menyetujui. Gmail yang tidak disetor tidak dibayar.</p></div>';
+    }
+
+    function claimHtml(ac) {
+      var instr = ac.instruction || '';
+      var left = ac.emails.filter(function (e) { return !copied[e]; }).length;
+      var label = ac.status === 'Diambil' ? 'Belum selesai' : 'Menunggu admin';
+      var items = ac.emails.map(function (e) {
+        var c = !!copied[e];
+        return '<button type="button" class="jb-item" data-act="copy-one" data-val="' + escapeHtml(e) + '">' + ICON +
+          '<code>' + escapeHtml(e) + '</code>' +
+          '<span class="jb-pill' + (c ? ' done' : '') + '">' + (c ? '✓ Tersalin' : label) + '</span></button>';
+      }).join('');
+
+      return '<div class="jb-notice"><b>🔑 Perintah job</b><pre>' +
+          (instr ? escapeHtml(instr) : 'Admin belum mengisi teks job.') + '</pre></div>' +
+        '<div class="jb-listbox"><div class="jb-listhead"><strong>Daftar Gmail</strong>' +
+          '<small>Total: <b>' + ac.qty + '</b> · Belum disalin: <b>' + left + '</b></small></div>' +
+          '<div class="jb-list">' + items + '</div></div>' +
+        '<p class="muted">Ketuk salah satu Gmail untuk menyalinnya satu per satu, atau pakai tombol di bawah untuk menyalin sekaligus.</p>' +
+        btn('copy-emails', ICON + ' Salin semua Gmail', '') +
+        (instr ? btn('copy-text', ICON + ' Salin teks job', '') : '') +
+        btn('copy-all', ICON + ' Salin semua teks (job + Gmail)', '') +
+        (ac.status === 'Diambil'
+          ? depositHtml(ac) + btn('finish', '✓ Tandai selesai (setor semua)', 'success', ac.id)
+          : '<div class="jb-notice jb-info">Menunggu pemeriksaan admin.</div>');
+    }
+
+    function takeHtml(j, d) {
+      var other = d.claims.some(isActive);
+      var reason = j.status !== 'OPEN' ? 'Job sedang ditutup oleh admin.'
+        : (j.price <= 0 ? 'Harga job belum diatur admin.'
+        : (j.available < 1 ? 'Stok email habis.'
+        : (other ? 'Selesaikan job yang sedang dikerjakan terlebih dahulu.' : '')));
+      if (reason) return '<p class="muted">' + reason + '</p>';
+
+      var max = Math.max(1, Math.min(j.maxPerClaim, j.available));
+      var q = Math.min(Math.max(qty[j.id] || 1, 1), max);
+      qty[j.id] = q;
+      return '<p class="muted" style="text-align:center">Jumlah email yang diambil</p>' +
+        '<div class="jb-stepper">' +
+          '<button type="button" data-act="qty-" data-val="' + j.id + '" aria-label="Kurangi">−</button>' +
+          '<strong>' + q + '</strong>' +
+          '<button type="button" data-act="qty+" data-val="' + j.id + '" data-max="' + max + '" aria-label="Tambah">+</button>' +
+        '</div>' +
+        btn('claim', 'Ambil Job · ' + q + ' email · ' + money(q * j.price), 'primary', j.id) +
+        '<p class="muted" style="text-align:center">Maksimal ' + max + ' email per pengambilan</p>';
+    }
+
+    function render(d) {
+      var list = document.querySelector('.jb-list');
+      var keep = list ? list.scrollTop : 0;
+
+      document.getElementById('jobCards').innerHTML = d.jobs.map(function (j) {
+        var ac = activeClaim(d, j.id);
+        var can = j.status === 'OPEN' && j.available > 0 && j.price > 0;
+        var open = openId === j.id;
+        return '<div class="jb-card' + (open ? ' open' : '') + (can || ac ? '' : ' off') + '">' +
+          '<div class="jb-head" role="button" tabindex="0" data-act="toggle" data-val="' + j.id + '">' +
+            '<div class="jb-top"><div>' +
+              '<strong class="jb-title">' + escapeHtml(j.name) + '</strong> ' +
+              (ac ? '<span class="badge warn">Sedang dikerjakan</span>'
+                  : '<span class="badge ' + (j.status === 'OPEN' ? 'ok' : 'warn') + '">' + (j.status === 'OPEN' ? 'Buka' : 'Tutup') + '</span>') +
+              '<div class="jb-sub">' + j.available + ' sisa · <span class="jb-price">' + money(j.price) + '/email</span></div>' +
+            '</div><span class="jb-chev">' + (open ? '▲ Tutup' : '▼ Detail') + '</span></div>' +
+            '<div class="jb-bar"><i style="width:' + j.usedPct + '%"></i></div>' +
+            '<small class="muted">Kuota terpakai ' + j.usedPct + '%</small>' +
+          '</div>' +
+          '<div class="jb-detail">' + (open ? (ac ? claimHtml(ac) : takeHtml(j, d)) : '') + '</div></div>';
+      }).join('');
+
+      var nl = document.querySelector('.jb-list');
+      if (nl) nl.scrollTop = keep;
+
+      document.getElementById('myJobClaims').innerHTML = d.claims.length ? d.claims.map(function (c) {
+        return '<div class="jb-card"><div class="jb-top"><strong>' + c.jobId.toUpperCase() + ' · ' + c.qty + ' email · ' + money(c.total) + '</strong>' +
+          '<span class="' + statusClass(c.status) + '">' + escapeHtml(c.status) + '</span></div></div>';
+      }).join('') : '<p class="empty-state">Belum ada job.</p>';
+    }
+
+    async function load(silent) {
+      try {
+        var d = await api('jobList', { token: getToken() });
+        var json = JSON.stringify(d);
+        if (silent && json === lastJson) return;
+        lastJson = json;
+        data = d;
+        if (!autoOpened) {
+          autoOpened = true;
+          var a = d.claims.filter(isActive)[0];
+          if (a) openId = a.jobId;
         }
+        say('');
+        render(d);
+      } catch (e) {
+        if (silent && data) return;
+        document.getElementById('jobCards').innerHTML =
+          '<div class="jb-notice"><b>Job belum bisa dimuat</b>' + escapeHtml(e.message || 'Terjadi kesalahan.') + '</div>' +
+          btn('retry', '↻ Coba lagi', 'primary');
+      }
+    }
+
+    function refreshAll() {
+      internalClick = true;
+      if (rb) rb.click();
+      internalClick = false;
+    }
+    if (rb) rb.addEventListener('click', function () { if (!internalClick) load(); });
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (_) {
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        var ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (!ok) throw new Error('fail');
+      }
+    }
+    async function doCopy(text, okMsg, emails) {
+      try {
+        await copyText(text);
+        (emails || []).forEach(function (e) { copied[e] = true; });
+        if (emails && emails.length) saveCopied();
+        toast(okMsg);
+        if (data) render(data);
+      } catch (_) {
+        toast('Gagal menyalin. Coba lagi.');
+      }
+    }
+
+    // Penghitung baris setoran diperbarui langsung tanpa render ulang (fokus tidak hilang).
+    document.getElementById('jobBoard').addEventListener('input', function (e) {
+      if (e.target.id !== 'depText') return;
+      deposit[e.target.getAttribute('data-claim')] = e.target.value;
+      var n = countLines(e.target.value);
+      var c = document.getElementById('depCount');
+      var s = document.getElementById('depEst');
+      var ac = (data && openId) ? activeClaim(data, openId) : null;
+      if (c) c.textContent = n;
+      if (s && ac) s.textContent = depEst(ac, n);
+    });
+
+    document.getElementById('jobBoard').addEventListener('click', async function (e) {
+      var el = e.target.closest('[data-act]');
+      if (!el) return;
+      var act = el.getAttribute('data-act');
+      var val = el.getAttribute('data-val');
+      var ac = (data && openId) ? activeClaim(data, openId) : null;
+
+      if (act === 'retry') return load();
+
+      if (act === 'toggle') {
+        openId = openId === val ? '' : val;
+        if (data) render(data);
+        return;
+      }
+      if (act === 'qty-' || act === 'qty+') {
+        var max = Number(el.getAttribute('data-max')) || 1;
+        var cur = qty[val] || 1;
+        qty[val] = act === 'qty+' ? Math.min(cur + 1, max) : Math.max(cur - 1, 1);
+        if (data) render(data);
+        return;
+      }
+      if (act === 'copy-one') return doCopy(val, 'Tersalin: ' + val, [val]);
+      if (act === 'copy-emails' && ac) return doCopy(ac.emails.join('\n'), ac.emails.length + ' Gmail disalin', ac.emails);
+      if (act === 'copy-text' && ac) return doCopy(ac.instruction || '', 'Teks job disalin');
+      if (act === 'copy-all' && ac) {
+        var txt = (ac.instruction ? ac.instruction + '\n\n' : '') + ac.emails.join('\n');
+        return doCopy(txt, 'Semua teks disalin', ac.emails);
       }
 
-      async function run(action, data) {
-        say('Memproses…');
-        var ok = true;
+      // Kirim setoran: hanya Gmail yang sudah dikerjakan
+      if (act === 'deposit' && ac) {
+        var listText = (deposit[ac.id] || '').trim();
+        var n = countLines(listText);
+        if (!n) { toast('Tempel Gmail yang sudah dikerjakan.'); return; }
+        var rest = ac.qty - n;
+        var ask = 'Kirim setoran ' + n + ' email ke admin?' +
+          (rest > 0 ? '\n\n' + rest + ' email lainnya dianggap tidak dikerjakan: tidak dibayar dan tidak bisa disetor lagi.' : '');
+        if (!confirm(ask)) return;
+        el.disabled = true;
         try {
-          var d = await api(action, Object.assign({ token: getToken() }, data));
-          say(d.message);
-        } catch (e) {
-          say(e.message, true);
-          ok = false;
+          var dr = await api('jobFinish', { token: getToken(), id: ac.id, emails: listText });
+          delete deposit[ac.id];
+          toast(dr.message || 'Setoran terkirim');
+          say('');
+        } catch (err) {
+          say(err.message, true);
+          toast(err.message);
         }
         await load();
-        // saldo/transaksi berubah saat klaim disetujui
-        var rb = document.getElementById('refreshBtn');
-        if (rb && action === 'adminJobClaimUpdate') rb.click();
-        return ok;
+        refreshAll();
+        return;
       }
 
-      root.addEventListener('click', async function (e) {
-        var t = e.target;
-        if (t.getAttribute('data-all')) return run('adminJobSetStatus', { jobId: 'all', status: t.getAttribute('data-all') });
-        if (t.getAttribute('data-claim')) return run('adminJobClaimUpdate', { id: t.getAttribute('data-claim'), status: t.getAttribute('data-st') });
-        var act = t.getAttribute('data-act');
-        if (!act) return;
-        var box = t.closest('.jb-box');
-        var id = box.getAttribute('data-job');
-        var saveData = {
-          jobId: id, name: box.querySelector('.f-name').value,
-          price: numRp(box.querySelector('.f-price').value),
-          maxPerClaim: Number(box.querySelector('.f-max').value),
-          instruction: box.querySelector('.f-instruction').value
-        };
-        var addText = box.querySelector('.f-emails').value;
-        var rmText = box.querySelector('.f-rmemails').value;
-        // Isian kotak (harga, nama, teks) disimpan dulu supaya tidak hilang saat panel dimuat ulang.
-        if (act === 'save') run('adminJobSave', saveData);
-        else if (act === 'add') { if (await run('adminJobSave', saveData)) run('adminJobAddEmails', { jobId: id, emails: addText }); }
-        else if (act === 'rmemails') run('adminJobRemoveEmails', { jobId: id, mode: 'list', emails: rmText });
-        else if (act === 'rmall') {
-          if (confirm('Hapus SEMUA email yang masih tersedia di ' + id.toUpperCase() + '? Email yang sudah diambil user tidak ikut terhapus.')) {
-            run('adminJobRemoveEmails', { jobId: id, mode: 'allAvailable' });
-          }
+      if (act === 'claim' || act === 'finish') {
+        if (act === 'finish' && !confirm('Tandai job ini sudah selesai dikerjakan?')) return;
+        el.disabled = true;
+        try {
+          var d = act === 'claim'
+            ? await api('jobClaim', { token: getToken(), jobId: val, qty: qty[val] || 1 })
+            : await api('jobFinish', { token: getToken(), id: val });
+          if (act === 'claim') openId = val;
+          toast(d.message || 'Berhasil');
+          say('');
+        } catch (err) {
+          say(err.message, true);
+          toast(err.message);
         }
-        else if (act === 'delete') {
-          if (confirm('Hapus ' + id.toUpperCase() + '? Job hilang dari daftar user. Sheet email diarsipkan.')) {
-            run('adminJobDelete', { jobId: id });
-          }
-        }
-        else { if (await run('adminJobSave', saveData)) run('adminJobSetStatus', { jobId: id, status: act }); }
-      });
-
-      document.getElementById('newJobBtn').addEventListener('click', async function () {
-        if (!(numRp(document.getElementById('newJobPrice').value) > 0) &&
-            !confirm('Harga masih 0, user tidak bisa mengambil job ini sampai harga diisi. Lanjut tambah job?')) return;
-        await run('adminJobCreate', {
-          name: document.getElementById('newJobName').value,
-          price: numRp(document.getElementById('newJobPrice').value),
-          maxPerClaim: Number(document.getElementById('newJobMax').value),
-          instruction: document.getElementById('newJobText').value
-        });
-        document.getElementById('newJobName').value = '';
-        document.getElementById('newJobText').value = '';
-      });
-
-      load();
+        await load();
+        refreshAll();
+      }
     });
-    </script>
-    <!-- ===== AKHIR KONTROL JOB EMAIL (BARU) ===== -->
 
-    <section class="panel table-panel">
-      <div class="panel-heading"><div><h2>Penarikan saldo</h2><p>Proses permintaan penarikan. Jika ditolak, saldo pengguna dikembalikan otomatis.</p></div></div>
-      <div class="table-wrap"><table>
-        <thead><tr><th>Tanggal</th><th>Pengguna</th><th>E-wallet</th><th>Nominal</th><th>Status</th><th>Catatan admin</th><th>Aksi</th></tr></thead>
-        <tbody id="adminWithdrawalRows"></tbody>
-      </table></div>
-    </section>
+    load();
+    setInterval(function () { if (!document.hidden) load(true); }, 60000);
+  });
+  </script>
+  <!-- ===== AKHIR CARI JOB EMAIL (BARU) ===== -->
 
-    <section class="workspace-grid">
-      <div class="panel">
-        <div class="panel-heading"><div><h2>Penyesuaian saldo</h2><p>Semua perubahan dicatat di riwayat transaksi.</p></div></div>
-        <form id="balanceForm">
-          <label>Pilih pengguna
-            <select id="balanceUser" required><option value="">Memuat pengguna…</option></select>
-          </label>
-          <label>Jenis transaksi
-            <select id="balanceType"><option value="credit">Tambah saldo</option><option value="debit">Kurangi saldo</option></select>
-          </label>
-          <label>Nominal (Rp)
-            <input id="balanceAmount" type="number" min="1" max="1000000000" step="1" required placeholder="Contoh: 50000">
-          </label>
-          <label>Keterangan
-            <input id="balanceDescription" maxlength="200" required placeholder="Contoh: Penyesuaian saldo">
-          </label>
-          <button class="btn btn-primary btn-wide" type="submit">Simpan transaksi →</button>
+  <!-- Form lama: disembunyikan (jangan dihapus, app.js masih memakainya) -->
+  <div class="card job-container" style="display:none">
+    <div class="job-header">
+      <span class="job-badge">GMAIL SERVICES</span>
+      <h2 class="card-title">Pilih Job Gmail</h2>
+      <p class="muted">
+        Pilih salah satu job Gmail yang tersedia, kemudian kirim
+        pengajuan untuk diproses oleh admin.
+      </p>
+    </div>
+
+    <form id="submissionForm" class="form">
+      <label class="job-label">Pilih pekerjaan</label>
+
+      <div class="job-grid">
+        <button type="button" class="job-option active"
+          data-job="job1" aria-pressed="true">
+          <span class="job-icon">✉</span>
+          <span class="job-info">
+            <strong id="jobTitle1">Job Gmail 01</strong>
+            <small id="jobDesc1">Pekerjaan Gmail reguler</small>
+            <b id="jobPrice1">Hubungi admin</b>
+          </span>
+          <span class="job-check">✓</span>
+        </button>
+
+        <button type="button" class="job-option"
+          data-job="job2" aria-pressed="false">
+          <span class="job-icon">✉</span>
+          <span class="job-info">
+            <strong id="jobTitle2">Job Gmail 02</strong>
+            <small id="jobDesc2">Pekerjaan Gmail pilihan</small>
+            <b id="jobPrice2">Hubungi admin</b>
+          </span>
+          <span class="job-check">✓</span>
+        </button>
+
+        <button type="button" class="job-option"
+          data-job="job3" aria-pressed="false">
+          <span class="job-icon">✉</span>
+          <span class="job-info">
+            <strong id="jobTitle3">Job Gmail 03</strong>
+            <small id="jobDesc3">Pekerjaan Gmail khusus</small>
+            <b id="jobPrice3">Hubungi admin</b>
+          </span>
+          <span class="job-check">✓</span>
+        </button>
+
+        <button type="button" class="job-option"
+          data-job="job4" aria-pressed="false">
+          <span class="job-icon">✉</span>
+          <span class="job-info">
+            <strong id="jobTitle4">Job Gmail 04</strong>
+            <small id="jobDesc4">Pekerjaan Gmail premium</small>
+            <b id="jobPrice4">Hubungi admin</b>
+          </span>
+          <span class="job-check">✓</span>
+        </button>
+
+        <button type="button" class="job-option"
+          data-job="job5" aria-pressed="false">
+          <span class="job-icon">✉</span>
+          <span class="job-info">
+            <strong id="jobTitle5">Job Gmail 05</strong>
+            <small id="jobDesc5">Pekerjaan Gmail eksklusif</small>
+            <b id="jobPrice5">Hubungi admin</b>
+          </span>
+          <span class="job-check">✓</span>
+        </button>
+      </div>
+
+      <input type="hidden" id="submissionType"
+        name="submissionType" value="job1">
+
+      <label>Referensi pengajuan
+        <input id="submissionReference" maxlength="180"
+          required placeholder="Masukkan nomor atau kode referensi">
+      </label>
+
+      <label>Catatan tambahan (opsional)
+        <textarea id="submissionNote" maxlength="500"
+          rows="3" placeholder="Tulis catatan untuk admin..."></textarea>
+      </label>
+
+      <p class="job-security">
+        🔒 Jangan pernah mengirim kata sandi, OTP, atau kode pemulihan
+        akun Gmail.
+      </p>
+
+      <button class="btn job-submit" type="submit">
+        Kirim Pengajuan Job
+      </button>
+    </form>
+
+    <p class="message" id="submissionMessage" role="status"></p>
+  </div>
+</section>
+
+<script>
+(function () {
+  const options = document.querySelectorAll(".job-option");
+  const selectedJob = document.getElementById("submissionType");
+
+  options.forEach(function (button) {
+    button.addEventListener("click", function () {
+      options.forEach(function (item) {
+        item.classList.remove("active");
+        item.setAttribute("aria-pressed", "false");
+      });
+
+      button.classList.add("active");
+      button.setAttribute("aria-pressed", "true");
+      selectedJob.value = button.dataset.job;
+    });
+  });
+})();
+</script>
+
+
+    <!-- SALDO -->
+    <section class="view" data-view="balance">
+      <div class="balance-card bc-alt">
+        <p class="bc-label">Saldo saat ini</p>
+        <h1 class="bc-value js-balance">Rp0</h1>
+        <p class="bc-info" id="balanceInfo"></p>
+      </div>
+
+      <div class="card status-row" id="withdrawStatus">Status penarikan: <b>-</b></div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2 class="card-title">Nomor e-wallet tersimpan</h2>
+          <span class="badge" id="walletBadge">Belum diisi</span>
+        </div>
+        <div class="provider-tabs">
+          <button type="button" class="provider-btn active" data-provider="DANA">DANA</button>
+          <button type="button" class="provider-btn" data-provider="OVO">OVO</button>
+          <button type="button" class="provider-btn" data-provider="GoPay">GoPay</button>
+        </div>
+        <p class="muted" id="walletHint">Simpan nomor agar tidak perlu mengetik ulang. Hanya angka, 10–15 digit.</p>
+        <form id="walletForm" class="inline-form">
+          <input id="walletNumber" inputmode="numeric" maxlength="15" placeholder="081234567890" required>
+          <button class="btn" type="submit">Simpan</button>
         </form>
-        <p class="message" id="balanceMessage" role="status"></p>
+        <p class="message" id="walletMessage" role="status"></p>
       </div>
 
-      <div class="panel">
-        <div class="panel-heading"><div><h2>Daftar pengguna</h2><p>Saldo dan peran akun.</p></div></div>
-        <div class="table-wrap"><table>
-          <thead><tr><th>Nama</th><th>Email</th><th>Peran</th><th>Saldo</th></tr></thead>
-          <tbody id="adminUserRows"></tbody>
-        </table></div>
+      <div class="card">
+        <h2 class="card-title">Tarik saldo</h2>
+        <form id="withdrawForm" class="inline-form">
+          <input id="withdrawAmount" type="number" inputmode="numeric" min="1" step="1" required placeholder="Nominal (Rp)">
+          <button class="btn" id="withdrawBtn" type="submit">Tarik saldo</button>
+        </form>
+        <p class="message" id="withdrawMessage" role="status"></p>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Riwayat penarikan</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tanggal</th><th>E-wallet</th><th>Nominal</th><th>Status</th><th>Catatan</th></tr></thead>
+            <tbody id="withdrawalRows"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
-    <section class="panel table-panel">
-      <div class="panel-heading"><div><h2>Transaksi terbaru</h2><p>Catatan perubahan saldo.</p></div></div>
-      <div class="table-wrap"><table>
-        <thead><tr><th>Tanggal</th><th>Pengguna</th><th>Jenis</th><th>Keterangan</th><th>Nominal</th><th>Status</th></tr></thead>
-        <tbody id="adminTransactionRows"></tbody>
-      </table></div>
+    <!-- PROFIL -->
+    <section class="view" data-view="profile">
+      <div class="card">
+        <h2 class="card-title">Profil</h2>
+        <div class="profile-row"><small>Nama</small><strong id="profileName">-</strong></div>
+        <div class="profile-row"><small>Email</small><strong id="profileEmail">-</strong></div>
+        <div class="profile-row"><small>Total pengajuan</small><strong id="profileTotal">0</strong></div>
+        <button class="btn btn-danger" id="logoutBtn" type="button">Keluar</button>
+      </div>
     </section>
-    <p class="message" id="adminMessage" role="status"></p>
   </main>
 
-  <footer class="footer">© <span id="year"></span> RAYYGMAIL · Admin console.</footer>
+  <nav class="bottom-nav" aria-label="Navigasi utama">
+    <button type="button" data-nav="home" class="active"><span>⌂</span>Beranda</button>
+    <button type="button" data-nav="history"><span>↺</span>Riwayat</button>
+    <button type="button" data-nav="deposit" class="fab-wrap"><span class="fab">➤</span><em>Stor</em></button>
+    <button type="button" data-nav="balance"><span>▣</span>Saldo</button>
+    <button type="button" data-nav="profile"><span>☺</span>Profil</button>
+  </nav>
+
   <script src="/app.js"></script>
 </body>
 </html>
