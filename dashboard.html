@@ -22,7 +22,7 @@
       <div class="balance-card">
         <p class="bc-label">Saldo anda</p>
         <h1 class="bc-value js-balance">Rp0</h1>
-        <p class="bc-sub">Halo, <span id="userName">-</span></p>
+        <p class="bc-sub">Hi, <span id="userName">-</span></p>
         <div class="bc-actions">
           <button class="chip chip-light" type="button" data-go="balance">⭳ Tarik saldo</button>
           <button class="chip chip-light" type="button" data-go="history">↺ Riwayat</button>
@@ -71,29 +71,126 @@
       </div>
     </section>
 
-    <!-- STOR -->
-    <section class="view" data-view="deposit">
-      <div class="card">
-        <h2 class="card-title">Kirim pengajuan</h2>
-        <p class="muted">Isi referensi pengajuan Anda. Jangan kirim kata sandi, OTP, atau kode pemulihan.</p>
-        <form id="submissionForm" class="form">
-          <label>Jenis pengajuan
-            <select id="submissionType">
-              <option>Setoran Gmail</option>
-              <option>Pertanyaan layanan</option>
-            </select>
-          </label>
-          <label>Referensi
-            <input id="submissionReference" maxlength="180" required placeholder="Nomor atau kode referensi">
-          </label>
-          <label>Catatan (opsional)
-            <textarea id="submissionNote" maxlength="500" rows="3" placeholder="Catatan tambahan"></textarea>
-          </label>
-          <button class="btn" type="submit">Kirim pengajuan</button>
-        </form>
-        <p class="message" id="submissionMessage" role="status"></p>
+    
+<!-- JOB GMAIL -->
+<section class="view" data-view="deposit">
+  <div class="card job-container">
+    <div class="job-header">
+      <span class="job-badge">GMAIL SERVICES</span>
+      <h2 class="card-title">Pilih Job Gmail</h2>
+      <p class="muted">
+        Pilih salah satu job Gmail yang tersedia, kemudian kirim
+        pengajuan untuk diproses oleh admin.
+      </p>
+    </div>
+
+    <form id="submissionForm" class="form">
+      <label class="job-label">Pilih pekerjaan</label>
+
+      <div class="job-grid">
+        <button type="button" class="job-option active"
+          data-job="job1" aria-pressed="true">
+          <span class="job-icon">✉</span>
+          <span class="job-info">
+            <strong id="jobTitle1">Job Gmail 01</strong>
+            <small id="jobDesc1">Pekerjaan Gmail reguler</small>
+            <b id="jobPrice1">Hubungi admin</b>
+          </span>
+          <span class="job-check">✓</span>
+        </button>
+
+        <button type="button" class="job-option"
+          data-job="job2" aria-pressed="false">
+          <span class="job-icon">✉</span>
+          <span class="job-info">
+            <strong id="jobTitle2">Job Gmail 02</strong>
+            <small id="jobDesc2">Pekerjaan Gmail pilihan</small>
+            <b id="jobPrice2">Hubungi admin</b>
+          </span>
+          <span class="job-check">✓</span>
+        </button>
+
+        <button type="button" class="job-option"
+          data-job="job3" aria-pressed="false">
+          <span class="job-icon">✉</span>
+          <span class="job-info">
+            <strong id="jobTitle3">Job Gmail 03</strong>
+            <small id="jobDesc3">Pekerjaan Gmail khusus</small>
+            <b id="jobPrice3">Hubungi admin</b>
+          </span>
+          <span class="job-check">✓</span>
+        </button>
+
+        <button type="button" class="job-option"
+          data-job="job4" aria-pressed="false">
+          <span class="job-icon">✉</span>
+          <span class="job-info">
+            <strong id="jobTitle4">Job Gmail 04</strong>
+            <small id="jobDesc4">Pekerjaan Gmail premium</small>
+            <b id="jobPrice4">Hubungi admin</b>
+          </span>
+          <span class="job-check">✓</span>
+        </button>
+
+        <button type="button" class="job-option"
+          data-job="job5" aria-pressed="false">
+          <span class="job-icon">✉</span>
+          <span class="job-info">
+            <strong id="jobTitle5">Job Gmail 05</strong>
+            <small id="jobDesc5">Pekerjaan Gmail eksklusif</small>
+            <b id="jobPrice5">Hubungi admin</b>
+          </span>
+          <span class="job-check">✓</span>
+        </button>
       </div>
-    </section>
+
+      <input type="hidden" id="submissionType"
+        name="submissionType" value="job1">
+
+      <label>Referensi pengajuan
+        <input id="submissionReference" maxlength="180"
+          required placeholder="Masukkan nomor atau kode referensi">
+      </label>
+
+      <label>Catatan tambahan (opsional)
+        <textarea id="submissionNote" maxlength="500"
+          rows="3" placeholder="Tulis catatan untuk admin..."></textarea>
+      </label>
+
+      <p class="job-security">
+        🔒 Jangan pernah mengirim kata sandi, OTP, atau kode pemulihan
+        akun Gmail.
+      </p>
+
+      <button class="btn job-submit" type="submit">
+        Kirim Pengajuan Job
+      </button>
+    </form>
+
+    <p class="message" id="submissionMessage" role="status"></p>
+  </div>
+</section>
+
+<script>
+(function () {
+  const options = document.querySelectorAll(".job-option");
+  const selectedJob = document.getElementById("submissionType");
+
+  options.forEach(function (button) {
+    button.addEventListener("click", function () {
+      options.forEach(function (item) {
+        item.classList.remove("active");
+        item.setAttribute("aria-pressed", "false");
+      });
+
+      button.classList.add("active");
+      button.setAttribute("aria-pressed", "true");
+      selectedJob.value = button.dataset.job;
+    });
+  });
+})();
+</script>
+
 
     <!-- SALDO -->
     <section class="view" data-view="balance">
