@@ -135,7 +135,7 @@
           '<button class="btn" data-claim="' + j.id + '">Ambil Job</button>' +
           '<small>maks ' + j.maxPerClaim + ' email</small></div>';
       }
-      return '<p class="muted">' + (j.status !== 'OPEN' ? 'Job sedang ditutup.' : 'Stok habis.') + '</p>';
+      return '<p class="muted">' + (j.status !== 'OPEN' ? 'Job sedang ditutup.' : (j.price <= 0 ? 'Harga job belum diatur admin.' : 'Stok habis.')) + '</p>';
     }
 
     function render(d) {
@@ -147,7 +147,7 @@
           '<strong>' + escapeHtml(j.name) + '</strong> <span class="badge ' + (j.status === 'OPEN' ? 'ok' : 'warn') + '">' +
           (j.status === 'OPEN' ? 'Buka' : 'Tutup') + '</span><br>' +
           '<small>' + j.available + ' sisa</small> · <span class="jb-price">' + money(j.price) + '/email</span></div>' +
-          '<span class="jb-hint">' + (openId === j.id ? '▲ Tutup' : '▼ Buka') + '</span></div>' +
+          '<span class="jb-hint">' + (openId === j.id ? '▲ Sembunyikan' : '▼ Detail') + '</span></div>' +
           '<div class="jb-bar"><i style="width:' + j.usedPct + '%"></i></div>' +
           '<small>Kuota terpakai ' + j.usedPct + '%</small></div>' +
           '<div class="jb-detail' + (openId === j.id ? ' show' : '') + '">' + detailHtml(j, d, can) + '</div></div>';
@@ -220,7 +220,7 @@
     });
 
     load();
-    setInterval(function () { load(true); }, 20000);
+    setInterval(function () { if (!document.hidden) load(true); }, 60000);
   });
   </script>
   <!-- ===== AKHIR CARI JOB EMAIL (BARU) ===== -->
