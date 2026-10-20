@@ -84,6 +84,7 @@
             '<div class="panel-heading" style="margin-bottom:8px"><h2>' + j.id.toUpperCase() + '</h2>' +
             '<span class="btn ' + (j.status === 'OPEN' ? 'btn-primary' : 'btn-outline') + '" style="cursor:default">' + j.status + '</span></div>' +
             '<p class="jb-stock">Total ' + j.total + ' · Tersedia ' + j.available + ' · Diambil ' + j.taken + ' · Selesai ' + j.done + ' · Ditolak ' + j.rejected + '</p>' +
+            (j.price <= 0 ? '<p class="message error">Harga belum diisi: user tidak bisa mengambil job ini.</p>' : '') +
             '<label>Nama job<input class="f-name" maxlength="40" value="' + escapeHtml(j.name) + '"></label>' +
             '<label>Harga per email (Rp)<input class="f-price" type="number" min="0" value="' + j.price + '"></label>' +
             '<label>Maks email per pengambilan<input class="f-max" type="number" min="1" max="100" value="' + j.maxPerClaim + '"></label>' +
