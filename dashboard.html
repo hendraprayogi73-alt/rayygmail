@@ -77,81 +77,177 @@
 
   <!-- ===== CARI JOB EMAIL (BARU) ===== -->
   <style>
-    .jb-card{border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
-    .jb-card.off{opacity:.6}
-    .jb-top{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+    #jobBoard{padding-bottom:16px}
+    .jb-card{border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px;background:#fff}
+    .jb-card.off{opacity:.7}
+    .jb-card.open{border-color:#93c5fd;box-shadow:0 6px 18px rgba(37,99,235,.12)}
+    .jb-head{display:block;cursor:pointer;min-height:48px}
+    .jb-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+    .jb-title{font-size:16px}
+    .jb-sub{margin-top:4px;font-size:13px;color:var(--muted)}
     .jb-price{color:#059669;font-weight:700}
+    .jb-chev{font-size:12px;font-weight:700;color:var(--blue);white-space:nowrap;padding:8px 12px;border-radius:999px;background:#eff6ff}
     .jb-bar{height:8px;border-radius:99px;background:#e2e8f0;margin:10px 0 4px;overflow:hidden}
     .jb-bar i{display:block;height:100%;background:linear-gradient(90deg,#f59e0b,#ef4444)}
-    .jb-row{display:flex;gap:8px;align-items:center;margin-top:10px}
-    .jb-row input{width:90px}
-    .jb-emails{background:#f8fafc;border-radius:12px;padding:10px;font-size:13px;word-break:break-all;white-space:pre-wrap;margin:8px 0}
-    .jb-head{cursor:pointer}
-    .jb-hint{font-size:12px;color:var(--muted)}
     .jb-detail{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
-    .jb-detail.show{display:block}
-    .jb-label{font-weight:700;font-size:13px;margin:10px 0 4px}
-    .jb-detail .btn{margin-right:6px;margin-top:6px}
+    .jb-card.open .jb-detail{display:block}
+
+    .jb-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:54px;margin-top:10px;
+      border-radius:16px;border:1px solid #bfdbfe;background:#eff6ff;color:#1e3a8a;font-weight:700;font-size:15px;cursor:pointer}
+    .jb-btn:active{transform:scale(.99)}
+    .jb-btn.primary{border-color:transparent;color:#fff;background:linear-gradient(135deg,var(--blue),var(--blue2));box-shadow:0 10px 22px rgba(37,99,235,.28)}
+    .jb-btn.success{border-color:transparent;color:#fff;background:linear-gradient(135deg,#059669,#34d399);box-shadow:0 10px 22px rgba(5,150,105,.25)}
+    .jb-btn:disabled{opacity:.55;cursor:not-allowed}
+
+    .jb-notice{background:#fffbeb;border:1px solid #fde68a;border-radius:16px;padding:12px 14px;color:#92400e;font-size:13px}
+    .jb-notice b{display:block;margin-bottom:6px}
+    .jb-notice pre{margin:0;white-space:pre-wrap;word-break:break-word;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;color:#78350f}
+    .jb-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;margin-top:10px}
+
+    .jb-listbox{border:1px solid var(--line);border-radius:18px;padding:12px;margin-top:12px;background:#fff}
+    .jb-listhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+    .jb-listhead small{color:var(--muted)}
+    .jb-list{max-height:340px;overflow-y:auto;display:grid;gap:8px;padding-right:4px}
+    .jb-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:#f1f5f9;border-radius:12px;padding:12px;min-height:50px;cursor:pointer;color:var(--ink)}
+    .jb-item:active{background:#dbeafe}
+    .jb-item svg{flex:none;color:#475569}
+    .jb-item code{flex:1;font:13px ui-monospace,Menlo,Consolas,monospace;word-break:break-all}
+    .jb-pill{flex:none;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#fff;border:1px solid var(--line);white-space:nowrap}
+    .jb-pill.done{background:#dcfce7;border-color:#bbf7d0;color:#166534}
+
+    .jb-stepper{display:flex;align-items:center;justify-content:center;gap:16px;margin:4px 0 2px}
+    .jb-stepper button{width:52px;height:52px;border-radius:14px;border:1px solid var(--line);background:#fff;font-size:24px;font-weight:700;cursor:pointer;color:var(--ink)}
+    .jb-stepper button:active{background:#eff6ff}
+    .jb-stepper strong{min-width:56px;text-align:center;font-size:24px}
+
+    .jb-toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);max-width:90vw;background:#0f172a;color:#fff;
+      padding:10px 16px;border-radius:999px;font-size:13px;z-index:60;opacity:0;pointer-events:none;transition:opacity .2s;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .jb-toast.show{opacity:1}
   </style>
 
   <div id="jobBoard">
     <div class="card">
       <h2 class="card-title">Cari Job Email</h2>
-      <p class="muted">Pilih job yang tersedia, ambil yang cocok untukmu.</p>
+      <p class="muted">Ketuk job untuk melihat detail, lalu tekan Ambil Job.</p>
       <div id="jobCards"><p class="muted">Memuat…</p></div>
       <p class="message" id="jobBoardMsg" role="status"></p>
     </div>
     <div class="card">
-      <h2 class="card-title">Job saya</h2>
+      <h2 class="card-title">Riwayat job saya</h2>
       <div id="myJobClaims"></div>
     </div>
   </div>
+  <div class="jb-toast" id="jbToast" role="status"></div>
 
   <script>
   document.addEventListener('DOMContentLoaded', function () {
     var msg = document.getElementById('jobBoardMsg');
+    var toastEl = document.getElementById('jbToast');
+    var rb = document.getElementById('refreshBtn');
+    var toastTimer = 0;
     var openId = '';
-    var copyMap = {};
+    var autoOpened = false;
+    var qty = {};
+    var data = null;
+    var lastJson = '';
+    var internalClick = false;
+    var copied = loadCopied();
+
+    var ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+
+    function loadCopied() {
+      try { return JSON.parse(localStorage.getItem('jb_copied_v1') || '{}') || {}; } catch (_) { return {}; }
+    }
+    function saveCopied() {
+      try { localStorage.setItem('jb_copied_v1', JSON.stringify(copied)); } catch (_) {}
+    }
+    function toast(t) {
+      toastEl.textContent = t;
+      toastEl.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 1800);
+    }
     function say(t, err) { msg.textContent = t || ''; msg.className = 'message' + (err ? ' error' : ''); }
-
     function isActive(c) { return c.status === 'Diambil' || c.status === 'Menunggu'; }
+    function activeClaim(d, jobId) {
+      return d.claims.filter(function (c) { return c.jobId === jobId && isActive(c); })[0] || null;
+    }
+    function btn(act, label, cls, val) {
+      return '<button type="button" class="jb-btn ' + (cls || '') + '" data-act="' + act + '"' +
+        (val ? ' data-val="' + escapeHtml(val) + '"' : '') + '>' + label + '</button>';
+    }
 
-    function detailHtml(j, d, can) {
-      var ac = d.claims.filter(function (c) { return c.jobId === j.id && isActive(c); })[0];
-      if (ac) {
-        var instr = ac.instruction || '';
-        copyMap[j.id] = (instr ? instr + '\n\n' : '') + ac.emails.join('\n');
-        return '<div class="jb-label">Teks job yang harus dikerjakan</div>' +
-          '<div class="jb-emails">' + (instr ? escapeHtml(instr) : 'Admin belum mengisi teks job.') + '</div>' +
-          '<div class="jb-label">Email kamu (' + ac.qty + ')</div>' +
-          '<div class="jb-emails">' + ac.emails.map(escapeHtml).join('\n') + '</div>' +
-          '<button class="btn" data-copy="' + j.id + '">Salin semua teks</button>' +
-          (ac.status === 'Diambil'
-            ? '<button class="btn" data-finish="' + ac.id + '">Tandai selesai</button>'
-            : '<span class="badge warn">Menunggu pemeriksaan admin</span>');
-      }
-      if (can) {
-        return '<div class="jb-row"><input type="number" min="1" max="' + j.maxPerClaim + '" value="1" id="q_' + j.id + '">' +
-          '<button class="btn" data-claim="' + j.id + '">Ambil Job</button>' +
-          '<small>maks ' + j.maxPerClaim + ' email</small></div>';
-      }
-      return '<p class="muted">' + (j.status !== 'OPEN' ? 'Job sedang ditutup.' : (j.price <= 0 ? 'Harga job belum diatur admin.' : 'Stok habis.')) + '</p>';
+    function claimHtml(ac) {
+      var instr = ac.instruction || '';
+      var left = ac.emails.filter(function (e) { return !copied[e]; }).length;
+      var label = ac.status === 'Diambil' ? 'Belum selesai' : 'Menunggu admin';
+      var items = ac.emails.map(function (e) {
+        var c = !!copied[e];
+        return '<button type="button" class="jb-item" data-act="copy-one" data-val="' + escapeHtml(e) + '">' + ICON +
+          '<code>' + escapeHtml(e) + '</code>' +
+          '<span class="jb-pill' + (c ? ' done' : '') + '">' + (c ? '✓ Tersalin' : label) + '</span></button>';
+      }).join('');
+
+      return '<div class="jb-notice"><b>🔑 Perintah job</b><pre>' +
+          (instr ? escapeHtml(instr) : 'Admin belum mengisi teks job.') + '</pre></div>' +
+        '<div class="jb-listbox"><div class="jb-listhead"><strong>Daftar Gmail</strong>' +
+          '<small>Total: <b>' + ac.qty + '</b> · Belum disalin: <b>' + left + '</b></small></div>' +
+          '<div class="jb-list">' + items + '</div></div>' +
+        '<p class="muted">Ketuk salah satu Gmail untuk menyalinnya satu per satu, atau pakai tombol di bawah untuk menyalin sekaligus.</p>' +
+        btn('copy-emails', ICON + ' Salin semua Gmail', '') +
+        (instr ? btn('copy-text', ICON + ' Salin teks job', '') : '') +
+        btn('copy-all', ICON + ' Salin semua teks (job + Gmail)', '') +
+        (ac.status === 'Diambil'
+          ? btn('finish', '✓ Tandai selesai', 'success', ac.id)
+          : '<div class="jb-notice jb-info">Menunggu pemeriksaan admin.</div>');
+    }
+
+    function takeHtml(j, d) {
+      var other = d.claims.some(isActive);
+      var reason = j.status !== 'OPEN' ? 'Job sedang ditutup oleh admin.'
+        : (j.price <= 0 ? 'Harga job belum diatur admin.'
+        : (j.available < 1 ? 'Stok email habis.'
+        : (other ? 'Selesaikan job yang sedang dikerjakan terlebih dahulu.' : '')));
+      if (reason) return '<p class="muted">' + reason + '</p>';
+
+      var max = Math.max(1, Math.min(j.maxPerClaim, j.available));
+      var q = Math.min(Math.max(qty[j.id] || 1, 1), max);
+      qty[j.id] = q;
+      return '<p class="muted" style="text-align:center">Jumlah email yang diambil</p>' +
+        '<div class="jb-stepper">' +
+          '<button type="button" data-act="qty-" data-val="' + j.id + '" aria-label="Kurangi">−</button>' +
+          '<strong>' + q + '</strong>' +
+          '<button type="button" data-act="qty+" data-val="' + j.id + '" data-max="' + max + '" aria-label="Tambah">+</button>' +
+        '</div>' +
+        btn('claim', 'Ambil Job · ' + q + ' email · ' + money(q * j.price), 'primary', j.id) +
+        '<p class="muted" style="text-align:center">Maksimal ' + max + ' email per pengambilan</p>';
     }
 
     function render(d) {
-      copyMap = {};
+      var list = document.querySelector('.jb-list');
+      var keep = list ? list.scrollTop : 0;
+
       document.getElementById('jobCards').innerHTML = d.jobs.map(function (j) {
+        var ac = activeClaim(d, j.id);
         var can = j.status === 'OPEN' && j.available > 0 && j.price > 0;
-        return '<div class="jb-card' + (can ? '' : ' off') + '">' +
-          '<div class="jb-head" data-toggle="' + j.id + '"><div class="jb-top"><div>' +
-          '<strong>' + escapeHtml(j.name) + '</strong> <span class="badge ' + (j.status === 'OPEN' ? 'ok' : 'warn') + '">' +
-          (j.status === 'OPEN' ? 'Buka' : 'Tutup') + '</span><br>' +
-          '<small>' + j.available + ' sisa</small> · <span class="jb-price">' + money(j.price) + '/email</span></div>' +
-          '<span class="jb-hint">' + (openId === j.id ? '▲ Sembunyikan' : '▼ Detail') + '</span></div>' +
-          '<div class="jb-bar"><i style="width:' + j.usedPct + '%"></i></div>' +
-          '<small>Kuota terpakai ' + j.usedPct + '%</small></div>' +
-          '<div class="jb-detail' + (openId === j.id ? ' show' : '') + '">' + detailHtml(j, d, can) + '</div></div>';
+        var open = openId === j.id;
+        return '<div class="jb-card' + (open ? ' open' : '') + (can || ac ? '' : ' off') + '">' +
+          '<div class="jb-head" role="button" tabindex="0" data-act="toggle" data-val="' + j.id + '">' +
+            '<div class="jb-top"><div>' +
+              '<strong class="jb-title">' + escapeHtml(j.name) + '</strong> ' +
+              (ac ? '<span class="badge warn">Sedang dikerjakan</span>'
+                  : '<span class="badge ' + (j.status === 'OPEN' ? 'ok' : 'warn') + '">' + (j.status === 'OPEN' ? 'Buka' : 'Tutup') + '</span>') +
+              '<div class="jb-sub">' + j.available + ' sisa · <span class="jb-price">' + money(j.price) + '/email</span></div>' +
+            '</div><span class="jb-chev">' + (open ? '▲ Tutup' : '▼ Detail') + '</span></div>' +
+            '<div class="jb-bar"><i style="width:' + j.usedPct + '%"></i></div>' +
+            '<small class="muted">Kuota terpakai ' + j.usedPct + '%</small>' +
+          '</div>' +
+          '<div class="jb-detail">' + (open ? (ac ? claimHtml(ac) : takeHtml(j, d)) : '') + '</div></div>';
       }).join('');
+
+      var nl = document.querySelector('.jb-list');
+      if (nl) nl.scrollTop = keep;
 
       document.getElementById('myJobClaims').innerHTML = d.claims.length ? d.claims.map(function (c) {
         return '<div class="jb-card"><div class="jb-top"><strong>' + c.jobId.toUpperCase() + ' · ' + c.qty + ' email · ' + money(c.total) + '</strong>' +
@@ -160,14 +256,33 @@
     }
 
     async function load(silent) {
-      var a = document.activeElement;
-      if (silent && a && a.id && a.id.indexOf('q_') === 0) return;
       try {
-        render(await api('jobList', { token: getToken() }));
+        var d = await api('jobList', { token: getToken() });
+        var json = JSON.stringify(d);
+        if (silent && json === lastJson) return;
+        lastJson = json;
+        data = d;
+        if (!autoOpened) {
+          autoOpened = true;
+          var a = d.claims.filter(isActive)[0];
+          if (a) openId = a.jobId;
+        }
+        say('');
+        render(d);
       } catch (e) {
-        if (!silent) say(e.message, true);
+        if (silent && data) return;
+        document.getElementById('jobCards').innerHTML =
+          '<div class="jb-notice"><b>Job belum bisa dimuat</b>' + escapeHtml(e.message || 'Terjadi kesalahan.') + '</div>' +
+          btn('retry', '↻ Coba lagi', 'primary');
       }
     }
+
+    function refreshAll() {
+      internalClick = true;
+      if (rb) rb.click();
+      internalClick = false;
+    }
+    if (rb) rb.addEventListener('click', function () { if (!internalClick) load(); });
 
     async function copyText(text) {
       try {
@@ -181,41 +296,63 @@
         if (!ok) throw new Error('fail');
       }
     }
+    async function doCopy(text, okMsg, emails) {
+      try {
+        await copyText(text);
+        (emails || []).forEach(function (e) { copied[e] = true; });
+        if (emails && emails.length) saveCopied();
+        toast(okMsg);
+        if (data) render(data);
+      } catch (_) {
+        toast('Gagal menyalin. Coba lagi.');
+      }
+    }
 
     document.getElementById('jobBoard').addEventListener('click', async function (e) {
-      var t = e.target;
-      var claim = t.getAttribute('data-claim');
-      var fin = t.getAttribute('data-finish');
-      var cp = t.getAttribute('data-copy');
+      var el = e.target.closest('[data-act]');
+      if (!el) return;
+      var act = el.getAttribute('data-act');
+      var val = el.getAttribute('data-val');
+      var ac = (data && openId) ? activeClaim(data, openId) : null;
 
-      if (cp) {
-        try { await copyText(copyMap[cp] || ''); say('Semua teks berhasil disalin.'); }
-        catch (_) { say('Gagal menyalin. Salin manual dari kotak teks.', true); }
+      if (act === 'retry') return load();
+
+      if (act === 'toggle') {
+        openId = openId === val ? '' : val;
+        if (data) render(data);
         return;
       }
+      if (act === 'qty-' || act === 'qty+') {
+        var max = Number(el.getAttribute('data-max')) || 1;
+        var cur = qty[val] || 1;
+        qty[val] = act === 'qty+' ? Math.min(cur + 1, max) : Math.max(cur - 1, 1);
+        if (data) render(data);
+        return;
+      }
+      if (act === 'copy-one') return doCopy(val, 'Tersalin: ' + val, [val]);
+      if (act === 'copy-emails' && ac) return doCopy(ac.emails.join('\n'), ac.emails.length + ' Gmail disalin', ac.emails);
+      if (act === 'copy-text' && ac) return doCopy(ac.instruction || '', 'Teks job disalin');
+      if (act === 'copy-all' && ac) {
+        var txt = (ac.instruction ? ac.instruction + '\n\n' : '') + ac.emails.join('\n');
+        return doCopy(txt, 'Semua teks disalin', ac.emails);
+      }
 
-      if (claim || fin) {
-        t.disabled = true;
+      if (act === 'claim' || act === 'finish') {
+        if (act === 'finish' && !confirm('Tandai job ini sudah selesai dikerjakan?')) return;
+        el.disabled = true;
         try {
-          var d = claim
-            ? await api('jobClaim', { token: getToken(), jobId: claim, qty: Number(document.getElementById('q_' + claim).value) })
-            : await api('jobFinish', { token: getToken(), id: fin });
-          if (claim) openId = claim;
-          say(d.message);
+          var d = act === 'claim'
+            ? await api('jobClaim', { token: getToken(), jobId: val, qty: qty[val] || 1 })
+            : await api('jobFinish', { token: getToken(), id: val });
+          if (act === 'claim') openId = val;
+          toast(d.message || 'Berhasil');
+          say('');
         } catch (err) {
           say(err.message, true);
+          toast(err.message);
         }
         await load();
-        var rb = document.getElementById('refreshBtn');
-        if (rb) rb.click();
-        return;
-      }
-
-      var head = t.closest('[data-toggle]');
-      if (head) {
-        var id = head.getAttribute('data-toggle');
-        openId = openId === id ? '' : id;
-        load();
+        refreshAll();
       }
     });
 
