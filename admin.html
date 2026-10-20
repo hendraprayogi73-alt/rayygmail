@@ -108,7 +108,11 @@
             '<button class="btn btn-outline" data-act="CLOSE">Close</button>' +
             '<button class="btn btn-outline" data-act="delete">Hapus</button></div>' +
             '<label>Tambah email (satu per baris)<textarea class="f-emails" placeholder="a@gmail.com&#10;b@gmail.com"></textarea></label>' +
-            '<button class="btn btn-primary btn-wide" data-act="add">Tambah ke ' + j.id.toUpperCase() + '</button></div>';
+            '<button class="btn btn-primary btn-wide" data-act="add">Tambah ke ' + j.id.toUpperCase() + '</button>' +
+            '<label style="margin-top:14px">Hapus email (satu per baris)<textarea class="f-rmemails" placeholder="a@gmail.com&#10;b@gmail.com"></textarea></label>' +
+            '<div class="jb-actions">' +
+            '<button class="btn btn-outline" data-act="rmemails">Hapus email ini</button>' +
+            '<button class="btn btn-outline" data-act="rmall">Hapus semua email tersedia</button></div></div>';
         }).join('') || '<p class="jb-stock">Belum ada job. Tambahkan job baru di atas.</p>';
 
         document.getElementById('jobClaimRows').innerHTML = d.claims.length ? d.claims.map(function (c) {
@@ -159,6 +163,12 @@
           instruction: box.querySelector('.f-instruction').value
         });
         else if (act === 'add') run('adminJobAddEmails', { jobId: id, emails: box.querySelector('.f-emails').value });
+        else if (act === 'rmemails') run('adminJobRemoveEmails', { jobId: id, mode: 'list', emails: box.querySelector('.f-rmemails').value });
+        else if (act === 'rmall') {
+          if (confirm('Hapus SEMUA email yang masih tersedia di ' + id.toUpperCase() + '? Email yang sudah diambil user tidak ikut terhapus.')) {
+            run('adminJobRemoveEmails', { jobId: id, mode: 'allAvailable' });
+          }
+        }
         else if (act === 'delete') {
           if (confirm('Hapus ' + id.toUpperCase() + '? Job hilang dari daftar user. Sheet email diarsipkan.')) {
             run('adminJobDelete', { jobId: id });
