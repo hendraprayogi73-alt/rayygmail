@@ -44,6 +44,114 @@
       </table></div>
     </section>
 
+    <!-- ===== KONTROL JOB EMAIL (BARU) ===== -->
+    <style>
+      .jb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+      .jb-box{border:1px solid var(--line);border-radius:16px;padding:16px}
+      .jb-box label{margin-bottom:10px}
+      .jb-box textarea{min-height:90px}
+      .jb-actions{display:flex;gap:8px;flex-wrap:wrap}
+      .jb-stock{font-size:12px;color:var(--muted);margin:0 0 10px}
+    </style>
+
+    <section class="panel table-panel" id="jobAdmin">
+      <div class="panel-heading">
+        <div><h2>Kontrol Job Email</h2><p>Isi stok, atur harga, teks job, dan buka/tutup tiap job.</p></div>
+        <div class="jb-actions">
+          <button class="btn btn-outline" data-all="OPEN">Buka semua</button>
+          <button class="btn btn-outline" data-all="CLOSE">Tutup semua</button>
+        </div>
+      </div>
+      <div class="jb-grid" id="jobAdminBoxes"></div>
+      <p class="message" id="jobAdminMsg" role="status"></p>
+
+      <h3 style="margin:22px 0 10px">Pengambilan job</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Tanggal</th><th>Pengguna</th><th>Job</th><th>Email</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody id="jobClaimRows"></tbody>
+      </table></div>
+    </section>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var root = document.getElementById('jobAdmin');
+      var msg = document.getElementById('jobAdminMsg');
+      function say(t, err) { msg.textContent = t || ''; msg.className = 'message' + (err ? ' error' : ''); }
+
+      function render(d) {
+        document.getElementById('jobAdminBoxes').innerHTML = d.jobs.map(function (j) {
+          return '<div class="jb-box" data-job="' + j.id + '">' +
+            '<div class="panel-heading" style="margin-bottom:8px"><h2>' + j.id.toUpperCase() + '</h2>' +
+            '<span class="btn ' + (j.status === 'OPEN' ? 'btn-primary' : 'btn-outline') + '" style="cursor:default">' + j.status + '</span></div>' +
+            '<p class="jb-stock">Total ' + j.total + ' · Tersedia ' + j.available + ' · Diambil ' + j.taken + ' · Selesai ' + j.done + '</p>' +
+            '<label>Nama job<input class="f-name" maxlength="40" value="' + escapeHtml(j.name) + '"></label>' +
+            '<label>Harga per email (Rp)<input class="f-price" type="number" min="0" value="' + j.price + '"></label>' +
+            '<label>Maks email per pengambilan<input class="f-max" type="number" min="1" max="100" value="' + j.maxPerClaim + '"></label>' +
+            '<label>Teks job (tampil ke user setelah klik Ambil Job)<textarea class="f-instruction" maxlength="3000" style="min-height:120px" placeholder="Tulis perintah/teks yang harus dikerjakan user">' + escapeHtml(j.instruction || '') + '</textarea></label>' +
+            '<div class="jb-actions" style="margin-bottom:14px">' +
+            '<button class="btn btn-primary" data-act="save">Simpan</button>' +
+            '<button class="btn btn-outline" data-act="OPEN">Open</button>' +
+            '<button class="btn btn-outline" data-act="CLOSE">Close</button></div>' +
+            '<label>Tambah email (satu per baris)<textarea class="f-emails" placeholder="a@gmail.com&#10;b@gmail.com"></textarea></label>' +
+            '<button class="btn btn-primary btn-wide" data-act="add">Tambah ke ' + j.id.toUpperCase() + '</button></div>';
+        }).join('');
+
+        document.getElementById('jobClaimRows').innerHTML = d.claims.length ? d.claims.map(function (c) {
+          var open = c.status === 'Diambil' || c.status === 'Menunggu';
+          return '<tr><td>' + escapeHtml(dateText(c.createdAt)) + '</td><td>' + escapeHtml(c.userName) + '</td>' +
+            '<td>' + c.jobId.toUpperCase() + '</td><td style="word-break:break-all;white-space:pre-wrap">' + c.emails.map(escapeHtml).join('\n') + '</td>' +
+            '<td>' + money(c.total) + '</td><td><span class="' + statusClass(c.status) + '">' + escapeHtml(c.status) + '</span></td><td>' +
+            (open ? '<button class="btn btn-primary" data-claim="' + c.id + '" data-st="Disetujui">Setujui</button> ' +
+                    '<button class="btn btn-outline" data-claim="' + c.id + '" data-st="Ditolak">Tolak</button>' : '') +
+            '</td></tr>';
+        }).join('') : '<tr><td colspan="7">Belum ada pengambilan.</td></tr>';
+      }
+
+      async function load() {
+        try {
+          render(await api('adminJobOverview', { token: getToken() }));
+        } catch (e) {
+          say(e.message, true);
+        }
+      }
+
+      async function run(action, data) {
+        say('Memproses…');
+        try {
+          var d = await api(action, Object.assign({ token: getToken() }, data));
+          say(d.message);
+        } catch (e) {
+          say(e.message, true);
+        }
+        await load();
+        // saldo/transaksi berubah saat klaim disetujui
+        var rb = document.getElementById('refreshBtn');
+        if (rb && action === 'adminJobClaimUpdate') rb.click();
+      }
+
+      root.addEventListener('click', function (e) {
+        var t = e.target;
+        if (t.getAttribute('data-all')) return run('adminJobSetStatus', { jobId: 'all', status: t.getAttribute('data-all') });
+        if (t.getAttribute('data-claim')) return run('adminJobClaimUpdate', { id: t.getAttribute('data-claim'), status: t.getAttribute('data-st') });
+        var act = t.getAttribute('data-act');
+        if (!act) return;
+        var box = t.closest('.jb-box');
+        var id = box.getAttribute('data-job');
+        if (act === 'save') run('adminJobSave', {
+          jobId: id, name: box.querySelector('.f-name').value,
+          price: Number(box.querySelector('.f-price').value),
+          maxPerClaim: Number(box.querySelector('.f-max').value),
+          instruction: box.querySelector('.f-instruction').value
+        });
+        else if (act === 'add') run('adminJobAddEmails', { jobId: id, emails: box.querySelector('.f-emails').value });
+        else run('adminJobSetStatus', { jobId: id, status: act });
+      });
+
+      load();
+    });
+    </script>
+    <!-- ===== AKHIR KONTROL JOB EMAIL (BARU) ===== -->
+
     <section class="panel table-panel">
       <div class="panel-heading"><div><h2>Penarikan saldo</h2><p>Proses permintaan penarikan. Jika ditolak, saldo pengguna dikembalikan otomatis.</p></div></div>
       <div class="table-wrap"><table>
