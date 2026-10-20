@@ -56,12 +56,25 @@
 
     <section class="panel table-panel" id="jobAdmin">
       <div class="panel-heading">
-        <div><h2>Kontrol Job Email</h2><p>Isi stok, atur harga, teks job, dan buka/tutup tiap job.</p></div>
+        <div><h2>Kontrol Job Email</h2><p>Isi stok, atur harga, teks job, buka/tutup, tambah, dan hapus tiap job.</p></div>
         <div class="jb-actions">
           <button class="btn btn-outline" data-all="OPEN">Buka semua</button>
           <button class="btn btn-outline" data-all="CLOSE">Tutup semua</button>
         </div>
       </div>
+
+      <!-- TAMBAH JOB BARU -->
+      <div class="jb-box" style="margin-bottom:16px">
+        <h3 style="margin:0 0 10px">Tambah job baru</h3>
+        <div class="jb-grid">
+          <label>Nama job<input id="newJobName" maxlength="40" placeholder="Kosongkan = otomatis"></label>
+          <label>Harga per email (Rp)<input id="newJobPrice" type="number" min="0" value="0"></label>
+          <label>Maks email per pengambilan<input id="newJobMax" type="number" min="1" max="100" value="10"></label>
+        </div>
+        <label>Teks job<textarea id="newJobText" maxlength="3000" placeholder="Perintah yang harus dikerjakan user"></textarea></label>
+        <button class="btn btn-primary" id="newJobBtn" type="button">+ Tambah job</button>
+      </div>
+
       <div class="jb-grid" id="jobAdminBoxes"></div>
       <p class="message" id="jobAdminMsg" role="status"></p>
 
@@ -92,10 +105,11 @@
             '<div class="jb-actions" style="margin-bottom:14px">' +
             '<button class="btn btn-primary" data-act="save">Simpan</button>' +
             '<button class="btn btn-outline" data-act="OPEN">Open</button>' +
-            '<button class="btn btn-outline" data-act="CLOSE">Close</button></div>' +
+            '<button class="btn btn-outline" data-act="CLOSE">Close</button>' +
+            '<button class="btn btn-outline" data-act="delete">Hapus</button></div>' +
             '<label>Tambah email (satu per baris)<textarea class="f-emails" placeholder="a@gmail.com&#10;b@gmail.com"></textarea></label>' +
             '<button class="btn btn-primary btn-wide" data-act="add">Tambah ke ' + j.id.toUpperCase() + '</button></div>';
-        }).join('');
+        }).join('') || '<p class="jb-stock">Belum ada job. Tambahkan job baru di atas.</p>';
 
         document.getElementById('jobClaimRows').innerHTML = d.claims.length ? d.claims.map(function (c) {
           var open = c.status === 'Diambil' || c.status === 'Menunggu';
@@ -145,7 +159,23 @@
           instruction: box.querySelector('.f-instruction').value
         });
         else if (act === 'add') run('adminJobAddEmails', { jobId: id, emails: box.querySelector('.f-emails').value });
+        else if (act === 'delete') {
+          if (confirm('Hapus ' + id.toUpperCase() + '? Job hilang dari daftar user. Sheet email diarsipkan.')) {
+            run('adminJobDelete', { jobId: id });
+          }
+        }
         else run('adminJobSetStatus', { jobId: id, status: act });
+      });
+
+      document.getElementById('newJobBtn').addEventListener('click', async function () {
+        await run('adminJobCreate', {
+          name: document.getElementById('newJobName').value,
+          price: Number(document.getElementById('newJobPrice').value),
+          maxPerClaim: Number(document.getElementById('newJobMax').value),
+          instruction: document.getElementById('newJobText').value
+        });
+        document.getElementById('newJobName').value = '';
+        document.getElementById('newJobText').value = '';
       });
 
       load();
