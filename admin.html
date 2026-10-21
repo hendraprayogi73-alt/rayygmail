@@ -48,7 +48,8 @@
 
     <!-- ===== KONTROL JOB EMAIL (BARU) ===== -->
     <style>
-      .jb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+      /* PERBAIKAN: min(300px,100%) agar tidak melebar di layar sempit */
+      .jb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:16px}
       .jb-box{border:1px solid var(--line);border-radius:16px;padding:16px}
       .jb-box label{margin-bottom:10px}
       .jb-box textarea{min-height:90px}
