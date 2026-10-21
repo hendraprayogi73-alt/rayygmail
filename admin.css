@@ -93,6 +93,12 @@ input::placeholder, textarea::placeholder { color: #94a3b8; }
 .hidden { display: none !important; }
 .footer { text-align: center; color: var(--muted); padding: 22px; font-size: 11px; border-top: 1px solid var(--line); }
 
+/* PERBAIKAN: gaya status (dipakai app.js dan halaman admin) */
+.status { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #f1f5f9; color: var(--muted); white-space: nowrap; }
+.status.s-ok { background: #dcfce7; color: #166534; }
+.status.s-bad { background: #fee2e2; color: #b91c1c; }
+.status.s-wait { background: #fef3c7; color: #92400e; }
+
 @media (max-width: 850px) {
   .workspace-grid { grid-template-columns: 1fr; }
 }
