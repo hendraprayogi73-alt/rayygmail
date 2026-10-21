@@ -25,26 +25,18 @@
     <section class="section-heading">
       <div><div class="eyebrow">CONTROL CENTER</div>
         <h1>Panel <span class="accent">Admin</span></h1>
-        <p>Kelola pengajuan, pengguna, penarikan, dan catatan saldo.</p>
+        <p>Kelola job, pengguna, penarikan, dan catatan saldo.</p>
       </div>
       <button class="btn btn-outline" id="refreshBtn">↻ Muat ulang</button>
     </section>
 
     <section class="dashboard-grid">
       <article class="metric-card"><div class="metric-top"><span>Total pengguna</span><span>♙</span></div><strong id="adminUserCount">0</strong></article>
-      <article class="metric-card"><div class="metric-top"><span>Total pengajuan</span><span>▤</span></div><strong id="adminSubmissionCount">0</strong></article>
+      <article class="metric-card"><div class="metric-top"><span>Total storan</span><span>▤</span></div><strong id="adminSubmissionCount">0</strong></article>
       <article class="metric-card balance-card"><div class="metric-top"><span>Menunggu pemeriksaan</span><span>◷</span></div><strong id="adminPendingCount">0</strong></article>
     </section>
 
-    <section class="panel table-panel">
-      <div class="panel-heading"><div><h2>Pengajuan masuk</h2><p>Periksa data dan perbarui status pengajuan.</p></div></div>
-      <div class="table-wrap"><table>
-        <thead><tr><th>Tanggal</th><th>Pengguna</th><th>Jenis</th><th>Referensi</th><th>Catatan pengguna</th><th>Status</th><th>Catatan admin</th><th>Aksi</th></tr></thead>
-        <tbody id="adminSubmissionRows"></tbody>
-      </table></div>
-    </section>
-
-    <!-- ===== KONTROL JOB EMAIL (BARU) ===== -->
+        <!-- ===== KONTROL JOB EMAIL (BARU) ===== -->
     <style>
       .jb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
       .jb-box{border:1px solid var(--line);border-radius:16px;padding:16px}
@@ -68,6 +60,7 @@
           <button class="btn btn-primary" data-act="toggle-create">＋ Tambah job</button>
           <button class="btn btn-outline" data-all="OPEN">Buka semua</button>
           <button class="btn btn-outline" data-all="CLOSE">Tutup semua</button>
+          <button class="btn btn-outline btn-danger-o" data-resetall="1">Reset semua kuota</button>
         </div>
       </div>
 
@@ -125,6 +118,7 @@
             '<button class="btn btn-primary" data-act="save">Simpan</button>' +
             '<button class="btn btn-outline" data-act="OPEN">Simpan &amp; Open</button>' +
             '<button class="btn btn-outline" data-act="CLOSE">Simpan &amp; Close</button>' +
+            '<button class="btn btn-outline" data-act="reset">Reset kuota</button>' +
             '<button class="btn btn-outline btn-danger-o" data-act="delete">Hapus job</button></div>' +
             '<label>Tambah email (satu per baris)<textarea class="f-emails" placeholder="a@gmail.com&#10;b@gmail.com"></textarea></label>' +
             '<button class="btn btn-primary btn-wide" data-act="add">Tambah email ke ' + escapeHtml(j.name) + '</button></div>';
@@ -203,6 +197,10 @@
         if (!t) return;
 
         if (t.getAttribute('data-all')) return run('adminJobSetStatus', { jobId: 'all', status: t.getAttribute('data-all') });
+        if (t.getAttribute('data-resetall')) {
+          if (!confirm('Reset kuota SEMUA job?\n\nSemua job menjadi kosong (0 email). Data lama diarsipkan. Job yang masih punya pengambilan aktif dilewati.')) return;
+          return run('adminJobReset', { jobId: 'all' });
+        }
         if (t.getAttribute('data-claim')) return run('adminJobClaimUpdate', { id: t.getAttribute('data-claim'), status: t.getAttribute('data-st') });
 
         var act = t.getAttribute('data-act');
@@ -232,6 +230,11 @@
         if (act === 'save') return run('adminJobSave', Object.assign({ jobId: id }, fields(box)), id);
         if (act === 'OPEN' || act === 'CLOSE') return run('adminJobSave', Object.assign({ jobId: id, status: act }, fields(box)), id);
         if (act === 'add') return run('adminJobAddEmails', { jobId: id, emails: box.querySelector('.f-emails').value }, id);
+        if (act === 'reset') {
+          var rn = box.querySelector('.f-name').value;
+          if (!confirm('Reset kuota "' + rn + '"?\n\nJob menjadi kosong (0 email) seperti awal. Data email lama diarsipkan dan email yang sudah pernah diberikan tidak bisa dipakai lagi. Pengaturan job (nama, harga, teks) tetap.')) return;
+          return run('adminJobReset', { jobId: id });
+        }
         if (act === 'delete') {
           var nm = box.querySelector('.f-name').value;
           if (!confirm('Hapus job "' + nm + '"?\n\nData email di job ini diarsipkan (tidak bisa diambil user lagi). Job yang masih punya pengambilan aktif tidak bisa dihapus.')) return;
@@ -298,4 +301,4 @@
   <footer class="footer">© <span id="year"></span> RAYYGMAIL · Admin console.</footer>
   <script src="/app.js"></script>
 </body>
-</html>
+</html>s
