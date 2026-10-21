@@ -453,25 +453,6 @@ async function initAdmin() {
         select.value = previous;
       }
 
-      $('adminSubmissionRows').innerHTML = data.submissions.map(s => `
-        <tr>
-          <td>${escapeHtml(dateText(s.createdAt))}</td>
-          <td>${escapeHtml(s.userName)}<br><small>${escapeHtml(s.userEmail)}</small></td>
-          <td>${escapeHtml(s.type)}</td>
-          <td>${escapeHtml(s.reference)}</td>
-          <td>${escapeHtml(s.note || '-')}</td>
-          <td>
-            <select class="status-select" data-status-id="${escapeHtml(s.id)}">
-              ${['Menunggu','Diproses','Disetujui','Ditolak'].map(status =>
-                `<option ${status === s.status ? 'selected' : ''}>${status}</option>`
-              ).join('')}
-            </select>
-          </td>
-          <td><input class="admin-note" data-note-id="${escapeHtml(s.id)}"
-            maxlength="500" value="${escapeHtml(s.adminNote || '')}" placeholder="Catatan admin"></td>
-          <td><button class="btn btn-primary save-status" data-save-id="${escapeHtml(s.id)}">Simpan</button></td>
-        </tr>`).join('') || '<tr><td colspan="8">Belum ada pengajuan.</td></tr>';
-
       $('adminTransactionRows').innerHTML = data.transactions.map(t => `
         <tr>
           <td>${escapeHtml(dateText(t.createdAt))}</td>
@@ -481,28 +462,6 @@ async function initAdmin() {
           <td>${escapeHtml(money(t.amount))}</td>
           <td>${escapeHtml(t.status)}</td>
         </tr>`).join('') || '<tr><td colspan="6">Belum ada transaksi.</td></tr>';
-
-      document.querySelectorAll('.save-status:not(.save-withdrawal)').forEach(button => {
-        button.addEventListener('click', async () => {
-          button.disabled = true;
-          try {
-            const id = button.dataset.saveId;
-            const status = document.querySelector(`[data-status-id="${CSS.escape(id)}"]`).value;
-            const adminNote = document.querySelector(`[data-note-id="${CSS.escape(id)}"]`).value;
-
-            const result = await api('adminUpdateSubmission', {
-              token: getToken(), id, status, adminNote
-            });
-
-            setMessage('adminMessage', result.message);
-            await load();
-          } catch (error) {
-            setMessage('adminMessage', error.message, true);
-          } finally {
-            button.disabled = false;
-          }
-        });
-      });
 
       // Penarikan saldo
       const wBody = $('adminWithdrawalRows');
