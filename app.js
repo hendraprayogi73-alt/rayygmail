@@ -340,6 +340,9 @@ async function initDashboard() {
           <td>${escapeHtml(w.adminNote || '-')}</td>
         </tr>`).join('') || '<tr><td colspan="5">Belum ada penarikan.</td></tr>';
     } catch (error) {
+      // PERBAIKAN: tampilkan error di elemen yang terlihat (jobBoardMsg),
+      // karena submissionMessage berada di form lama yang disembunyikan.
+      setMessage('jobBoardMsg', error.message, true);
       setMessage('submissionMessage', error.message, true);
     }
   }
