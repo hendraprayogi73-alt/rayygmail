@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#15803d">
+  <meta name="theme-color" content="#059669">
   <title>RAYYGMAIL — Admin</title>
   <link rel="stylesheet" href="/admin.css">
-  <link rel="stylesheet" href="/theme-green.css">
 </head>
 <body>
   <div class="ambient ambient-one"></div>
@@ -407,6 +406,136 @@
     });
     </script>
     <!-- ===== AKHIR KONTROL JOB EMAIL (BARU) ===== -->
+
+    <!-- ===== INFORMASI & SALURAN WHATSAPP (BARU) ===== -->
+    <section class="panel table-panel" id="infoAdmin">
+      <div class="panel-heading">
+        <div><h2>Informasi &amp; Saluran WhatsApp</h2><p>Informasi tampil di Beranda dashboard pengguna. Tombol WhatsApp membuka link yang Anda isi.</p></div>
+      </div>
+      <div class="jb-grid">
+        <div class="jb-box">
+          <h3 style="margin:0 0 10px">Tambah / edit informasi</h3>
+          <input type="hidden" id="infoId">
+          <label>Judul<input id="infoTitle" maxlength="80" placeholder="Informasi Resmi"></label>
+          <label>Isi informasi<textarea id="infoMessage" maxlength="600" style="min-height:110px" placeholder="Tulis pengumuman untuk pengguna"></textarea></label>
+          <label style="display:flex;align-items:center;gap:8px"><input id="infoActive" type="checkbox" checked style="width:auto;display:inline-block;margin:0"> Tampilkan ke pengguna</label>
+          <div class="jb-actions">
+            <button class="btn btn-primary" id="infoSaveBtn" type="button">Simpan informasi</button>
+            <button class="btn btn-outline" id="infoCancelBtn" type="button" style="display:none">Batal edit</button>
+          </div>
+        </div>
+        <div class="jb-box">
+          <h3 style="margin:0 0 10px">Tombol saluran WhatsApp</h3>
+          <label>Link WhatsApp<input id="waUrl" placeholder="https://whatsapp.com/channel/... atau https://wa.me/628..."></label>
+          <label>Teks tombol<input id="waLabel" maxlength="40" placeholder="Gabung Saluran WhatsApp"></label>
+          <p class="jb-stock">Kosongkan link untuk menyembunyikan tombol. Hanya link WhatsApp resmi yang diterima.</p>
+          <div class="jb-actions">
+            <button class="btn btn-primary" id="waSaveBtn" type="button">Simpan link</button>
+            <a class="btn btn-outline" id="waTest" href="#" target="_blank" rel="noopener noreferrer" style="display:none">Uji link ↗</a>
+          </div>
+        </div>
+      </div>
+
+      <h3 style="margin:22px 0 10px">Daftar informasi</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Diperbarui</th><th>Judul</th><th>Isi</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody id="infoRows"></tbody>
+      </table></div>
+      <p class="message" id="infoMsg" role="status"></p>
+    </section>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var root = document.getElementById('infoAdmin');
+      function g(id) { return document.getElementById(id); }
+      var items = [];
+
+      function say(t, err) { var m = g('infoMsg'); m.textContent = t || ''; m.className = 'message' + (err ? ' error' : ''); }
+
+      function resetForm() {
+        g('infoId').value = ''; g('infoTitle').value = ''; g('infoMessage').value = '';
+        g('infoActive').checked = true;
+        g('infoSaveBtn').textContent = 'Simpan informasi';
+        g('infoCancelBtn').style.display = 'none';
+      }
+
+      function render(d) {
+        items = d.items;
+        g('infoRows').innerHTML = d.items.length ? d.items.map(function (x) {
+          var short = x.message.length > 110 ? x.message.slice(0, 110) + '…' : x.message;
+          return '<tr><td>' + escapeHtml(dateText(x.updatedAt)) + '</td>' +
+            '<td><b>' + escapeHtml(x.title) + '</b></td>' +
+            '<td style="white-space:pre-wrap;word-break:break-word">' + escapeHtml(short) + '</td>' +
+            '<td><span class="status ' + (x.active ? 's-ok' : '') + '">' + (x.active ? 'Aktif' : 'Nonaktif') + '</span></td>' +
+            '<td><div class="jb-actions">' +
+            '<button class="btn btn-outline" data-info-edit="' + x.id + '">Edit</button>' +
+            '<button class="btn btn-outline" data-info-toggle="' + x.id + '">' + (x.active ? 'Nonaktifkan' : 'Aktifkan') + '</button>' +
+            '<button class="btn btn-outline jb-danger" data-info-del="' + x.id + '">Hapus</button></div></td></tr>';
+        }).join('') : '<tr><td colspan="5">Belum ada informasi.</td></tr>';
+
+        if (document.activeElement !== g('waUrl')) g('waUrl').value = d.wa.url || '';
+        if (document.activeElement !== g('waLabel')) g('waLabel').value = d.wa.label || '';
+        var t = g('waTest');
+        if (d.wa.url) { t.href = d.wa.url; t.style.display = ''; } else { t.style.display = 'none'; }
+      }
+
+      async function load() {
+        try { render(await api('adminInfoOverview', { token: getToken() })); }
+        catch (e) { say(e.message, true); }
+      }
+
+      async function run(action, data) {
+        say('Memproses…');
+        try {
+          var d = await api(action, Object.assign({ token: getToken() }, data));
+          say(d.message);
+          await load();
+          return true;
+        } catch (e) {
+          say(e.message, true);
+          return false;
+        }
+      }
+
+      g('infoSaveBtn').addEventListener('click', async function () {
+        var ok = await run('adminInfoSave', {
+          id: g('infoId').value, title: g('infoTitle').value,
+          message: g('infoMessage').value, active: g('infoActive').checked
+        });
+        if (ok) resetForm();
+      });
+      g('infoCancelBtn').addEventListener('click', function () { resetForm(); say(''); });
+      g('waSaveBtn').addEventListener('click', function () {
+        run('adminInfoWaSave', { url: g('waUrl').value, label: g('waLabel').value });
+      });
+
+      root.addEventListener('click', function (e) {
+        var t = e.target.closest('button');
+        if (!t) return;
+        var find = function (id) { return items.filter(function (x) { return x.id === id; })[0]; };
+        var ed = t.getAttribute('data-info-edit');
+        var tg = t.getAttribute('data-info-toggle');
+        var dl = t.getAttribute('data-info-del');
+        if (ed) {
+          var x = find(ed); if (!x) return;
+          g('infoId').value = x.id; g('infoTitle').value = x.title; g('infoMessage').value = x.message;
+          g('infoActive').checked = x.active;
+          g('infoSaveBtn').textContent = 'Perbarui informasi';
+          g('infoCancelBtn').style.display = '';
+          g('infoTitle').focus();
+          g('infoTitle').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (tg) {
+          var y = find(tg); if (!y) return;
+          run('adminInfoSave', { id: y.id, title: y.title, message: y.message, active: !y.active });
+        } else if (dl) {
+          if (confirm('Hapus informasi ini?')) run('adminInfoDelete', { id: dl });
+        }
+      });
+
+      load();
+    });
+    </script>
+    <!-- ===== AKHIR INFORMASI & SALURAN WHATSAPP (BARU) ===== -->
 
     <section class="panel table-panel">
       <div class="panel-heading"><div><h2>Penarikan saldo</h2><p>Proses permintaan penarikan. Jika ditolak, saldo pengguna dikembalikan otomatis.</p></div></div>
