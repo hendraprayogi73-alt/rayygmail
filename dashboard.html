@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#15803d">
+  <meta name="theme-color" content="#059669">
   <title>RAYYGMAIL — Dashboard</title>
   <link rel="stylesheet" href="/dashboard.css">
-  <link rel="stylesheet" href="/theme-green.css">
 </head>
 <body class="rx">
   <header class="rx-top">
@@ -43,6 +42,91 @@
         <div class="card stat"><small>Diproses</small><strong id="statProcess">0</strong></div>
         <div class="card stat"><small>Ditolak</small><strong id="statRejected">0</strong></div>
       </div>
+
+      <!-- ===== INFORMASI & SALURAN WHATSAPP (BARU) ===== -->
+      <style>
+        .info-banner{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid #a7f3d0;border-radius:20px;
+          background:linear-gradient(135deg,#ecfdf5,#d1fae5);margin-bottom:12px}
+        .info-ico{flex:none;width:38px;height:38px;border-radius:12px;background:#fff;display:grid;place-items:center;font-size:18px}
+        .info-body{flex:1;min-width:0}
+        .info-body b{display:block;font-size:14px}
+        .info-body p{margin:4px 0 0;font-size:13px;color:#14532d;white-space:pre-line;overflow-wrap:anywhere}
+        .info-ctl{flex:none;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+        .info-ctl button{width:30px;height:30px;border:0;border-radius:50%;background:rgba(255,255,255,.85);cursor:pointer;font-size:14px;color:var(--ink)}
+        .info-reopen{margin-bottom:12px}
+        .wa-btn{display:flex;align-items:center;justify-content:center;gap:10px;min-height:52px;border-radius:16px;margin-bottom:16px;
+          font-weight:800;text-decoration:none;color:#052e1b;background:linear-gradient(135deg,#25d366,#6ee7a0);box-shadow:0 10px 22px rgba(37,211,102,.28)}
+        .wa-btn:active{transform:scale(.99)}
+      </style>
+      <div id="infoWrap" style="display:none">
+        <div class="info-banner" id="infoBanner" role="status">
+          <span class="info-ico" aria-hidden="true">📢</span>
+          <div class="info-body"><b id="infoTitle"></b><p id="infoText"></p></div>
+          <div class="info-ctl">
+            <button type="button" id="infoPrev" aria-label="Sebelumnya">‹</button>
+            <span id="infoPos">1/1</span>
+            <button type="button" id="infoNext" aria-label="Berikutnya">›</button>
+            <button type="button" id="infoClose" aria-label="Tutup informasi">✕</button>
+          </div>
+        </div>
+        <button type="button" class="chip info-reopen" id="infoReopen" style="display:none">📢 Lihat informasi</button>
+        <a class="wa-btn" id="waBtn" href="#" target="_blank" rel="noopener noreferrer" style="display:none">
+          <span aria-hidden="true">💬</span><span id="waLabel">Saluran WhatsApp</span><span aria-hidden="true">↗</span>
+        </a>
+      </div>
+      <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        function g(id) { return document.getElementById(id); }
+        var items = [], wa = { url: '', label: '' }, idx = 0;
+
+        function sig() { return items.map(function (x) { return x.id + ':' + x.updatedAt; }).join('|'); }
+        function isClosed() { try { return localStorage.getItem('info_closed_v1') === sig(); } catch (_) { return false; } }
+        function setClosed(v) {
+          try { if (v) localStorage.setItem('info_closed_v1', sig()); else localStorage.removeItem('info_closed_v1'); } catch (_) {}
+        }
+
+        function paint() {
+          var showBanner = items.length > 0 && !isClosed();
+          g('infoBanner').style.display = showBanner ? 'flex' : 'none';
+          g('infoReopen').style.display = (items.length > 0 && !showBanner) ? 'inline-block' : 'none';
+          if (showBanner) {
+            if (idx >= items.length) idx = 0;
+            var it = items[idx];
+            g('infoTitle').textContent = it.title;
+            g('infoText').textContent = it.message;
+            g('infoPos').textContent = (idx + 1) + '/' + items.length;
+            var multi = items.length > 1;
+            g('infoPrev').style.display = g('infoNext').style.display = g('infoPos').style.display = multi ? '' : 'none';
+          }
+          var b = g('waBtn');
+          if (wa.url) {
+            b.href = wa.url;
+            g('waLabel').textContent = wa.label || 'Saluran WhatsApp';
+            b.style.display = 'flex';
+          } else { b.style.display = 'none'; }
+          g('infoWrap').style.display = (items.length > 0 || wa.url) ? 'block' : 'none';
+        }
+
+        async function loadInfo() {
+          try {
+            var d = await api('infoList', { token: getToken() });
+            items = d.items || [];
+            wa = d.wa || { url: '', label: '' };
+            paint();
+          } catch (_) { /* informasi bersifat tambahan; abaikan error */ }
+        }
+
+        g('infoPrev').addEventListener('click', function () { idx = (idx - 1 + items.length) % items.length; paint(); });
+        g('infoNext').addEventListener('click', function () { idx = (idx + 1) % items.length; paint(); });
+        g('infoClose').addEventListener('click', function () { setClosed(true); paint(); });
+        g('infoReopen').addEventListener('click', function () { setClosed(false); paint(); });
+        var rbInfo = document.getElementById('refreshBtn');
+        if (rbInfo) rbInfo.addEventListener('click', loadInfo);
+
+        loadInfo();
+      });
+      </script>
+      <!-- ===== AKHIR INFORMASI & SALURAN WHATSAPP (BARU) ===== -->
 
       <div class="card">
         <h2 class="card-title">Aktivitas terbaru</h2>
@@ -96,8 +180,8 @@
     .jb-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:54px;margin-top:10px;
       border-radius:16px;border:1px solid #bbf7d0;background:#f0fdf4;color:#14532d;font-weight:700;font-size:15px;cursor:pointer}
     .jb-btn:active{transform:scale(.99)}
-    .jb-btn.primary{border-color:transparent;color:#fff;background:linear-gradient(135deg,var(--blue),var(--blue2));box-shadow:0 10px 22px rgba(22,163,74,.28)}
-    .jb-btn.success{border-color:transparent;color:#fff;background:linear-gradient(135deg,#059669,#34d399);box-shadow:0 10px 22px rgba(5,150,105,.25)}
+    .jb-btn.primary{border-color:transparent;color:#052e1b;background:linear-gradient(135deg,var(--blue),var(--blue2));box-shadow:0 10px 22px rgba(22,163,74,.28)}
+    .jb-btn.success{border-color:transparent;color:#052e1b;background:linear-gradient(135deg,#059669,#34d399);box-shadow:0 10px 22px rgba(5,150,105,.25)}
     .jb-btn:disabled{opacity:.55;cursor:not-allowed}
 
     .jb-notice{background:#fffbeb;border:1px solid #fde68a;border-radius:16px;padding:12px 14px;color:#92400e;font-size:13px}
