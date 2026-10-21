@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#1d4ed8">
+  <meta name="theme-color" content="#15803d">
   <title>RAYYGMAIL — Admin</title>
   <link rel="stylesheet" href="/admin.css">
+  <link rel="stylesheet" href="/theme-green.css">
 </head>
 <body>
   <div class="ambient ambient-one"></div>
@@ -36,7 +37,9 @@
       <article class="metric-card balance-card"><div class="metric-top"><span>Menunggu pemeriksaan</span><span>◷</span></div><strong id="adminPendingCount">0</strong></article>
     </section>
 
-    <section class="panel table-panel">
+    <!-- "Pengajuan masuk / Referensi" DIHILANGKAN dari tampilan.
+         Elemen dibiarkan tersembunyi karena app.js masih mengisi #adminSubmissionRows. -->
+    <section class="panel table-panel" style="display:none" aria-hidden="true">
       <div class="panel-heading"><div><h2>Pengajuan masuk</h2><p>Periksa data dan perbarui status pengajuan.</p></div></div>
       <div class="table-wrap"><table>
         <thead><tr><th>Tanggal</th><th>Pengguna</th><th>Jenis</th><th>Referensi</th><th>Catatan pengguna</th><th>Status</th><th>Catatan admin</th><th>Aksi</th></tr></thead>
@@ -52,14 +55,36 @@
       .jb-box textarea{min-height:90px}
       .jb-actions{display:flex;gap:8px;flex-wrap:wrap}
       .jb-stock{font-size:12px;color:var(--muted);margin:0 0 10px}
+      .jb-danger{color:#b91c1c !important;border-color:#fca5a5 !important}
+
+      .jb-admin-toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);max-width:92vw;background:#0f172a;color:#fff;
+        padding:10px 16px;border-radius:14px;font-size:13px;z-index:80;opacity:0;pointer-events:none;transition:opacity .2s;text-align:center}
+      .jb-admin-toast.show{opacity:1}
+      .jb-admin-toast.err{background:#b91c1c}
+
+      .st-bar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+      .st-list{max-height:300px;overflow-y:auto;display:grid;gap:8px;padding-right:4px}
+      .st-row{display:flex;gap:8px;align-items:stretch}
+      .st-copy{flex:1;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;border:0;background:#f1f5f9;
+        border-radius:12px;padding:12px;min-height:46px;cursor:pointer;color:var(--ink,#0f172a);font:13px ui-monospace,Menlo,Consolas,monospace;word-break:break-all}
+      .st-copy:active{background:#dcfce7}
+      .st-del{border:0;border-radius:12px;padding:0 14px;min-height:46px;font-weight:700;cursor:pointer;background:#fee2e2;color:#b91c1c}
+      .st-del:disabled{opacity:.4;cursor:not-allowed}
+      .st-pill{flex:none;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;font-family:inherit}
+      .st-wait{background:#fef3c7;color:#92400e}
+      .st-ok{background:#dcfce7;color:#166534}
+      .st-bad{background:#fee2e2;color:#b91c1c}
+      .st-claim{border:1px dashed var(--line);border-radius:12px;padding:10px;margin:8px 0;font-size:13px}
     </style>
 
     <section class="panel table-panel" id="jobAdmin">
       <div class="panel-heading">
-        <div><h2>Kontrol Job Email</h2><p>Isi stok, atur harga, teks job, buka/tutup, tambah, dan hapus tiap job.</p></div>
+        <div><h2>Kontrol Job Email</h2><p>Isi stok, atur harga, teks job, buka/tutup, tambah, hapus, dan reset tiap job.</p></div>
         <div class="jb-actions">
           <button class="btn btn-outline" data-all="OPEN">Buka semua</button>
           <button class="btn btn-outline" data-all="CLOSE">Tutup semua</button>
+          <button class="btn btn-outline" data-sys="quota-all">Reset kuota semua</button>
+          <button class="btn btn-outline jb-danger" data-sys="reset-all">Reset semua job</button>
         </div>
       </div>
 
@@ -77,11 +102,27 @@
 
       <div class="jb-grid" id="jobAdminBoxes"></div>
       <p class="message" id="jobAdminMsg" role="status"></p>
+      <div class="jb-admin-toast" id="jbAdminToast" role="status"></div>
 
-      <h3 style="margin:22px 0 10px">Pengambilan job</h3>
+      <!-- PENGAMBILAN JOB: email yang sedang dikerjakan user (belum disetor) -->
+      <h3 style="margin:22px 0 10px">Pengambilan job <small style="font-weight:400;color:var(--muted)">(sedang dikerjakan)</small></h3>
       <div class="table-wrap"><table>
         <thead><tr><th>Tanggal</th><th>Pengguna</th><th>Job</th><th>Email</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
         <tbody id="jobClaimRows"></tbody>
+      </table></div>
+
+      <!-- STORAN: email yang sudah disetor user, terpisah per job -->
+      <h3 style="margin:22px 0 10px">Storan email per job <small style="font-weight:400;color:var(--muted)">(sudah disetor user)</small></h3>
+      <div class="jb-grid" id="jobStoranBoxes"></div>
+
+      <!-- RIWAYAT SELESAI -->
+      <div class="panel-heading" style="margin:22px 0 10px">
+        <h3 style="margin:0">Riwayat pengambilan selesai</h3>
+        <button class="btn btn-outline" data-sys="clear-history">Hapus semua riwayat selesai</button>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Tanggal</th><th>Pengguna</th><th>Job</th><th>Email</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody id="jobHistoryRows"></tbody>
       </table></div>
     </section>
 
@@ -89,7 +130,19 @@
     document.addEventListener('DOMContentLoaded', function () {
       var root = document.getElementById('jobAdmin');
       var msg = document.getElementById('jobAdminMsg');
-      function say(t, err) { msg.textContent = t || ''; msg.className = 'message' + (err ? ' error' : ''); }
+      var toastEl = document.getElementById('jbAdminToast');
+      var toastT = 0;
+      var lastData = null;
+
+      function say(t, err) {
+        msg.textContent = t || ''; msg.className = 'message' + (err ? ' error' : '');
+        if (t && t !== 'Memproses…') {
+          toastEl.textContent = t;
+          toastEl.className = 'jb-admin-toast show' + (err ? ' err' : '');
+          clearTimeout(toastT);
+          toastT = setTimeout(function () { toastEl.className = 'jb-admin-toast'; }, err ? 7000 : 4000);
+        }
+      }
 
       // ----- Input harga manual: "Rp 1,500" -----
       function fmtRp(v) {
@@ -111,39 +164,110 @@
         if (t.classList.contains('f-price') || t.id === 'newJobPrice') liveRp(t);
       });
 
-      function render(d) {
-        document.getElementById('jobAdminBoxes').innerHTML = d.jobs.map(function (j) {
-          return '<div class="jb-box" data-job="' + j.id + '">' +
-            '<div class="panel-heading" style="margin-bottom:8px"><h2>' + j.id.toUpperCase() + '</h2>' +
-            '<span class="btn ' + (j.status === 'OPEN' ? 'btn-primary' : 'btn-outline') + '" style="cursor:default">' + j.status + '</span></div>' +
-            '<p class="jb-stock">Total ' + j.total + ' · Tersedia ' + j.available + ' · Diambil ' + j.taken + ' · Selesai ' + j.done + ' · Ditolak ' + j.rejected + '</p>' +
-            (j.price <= 0 ? '<p class="message error">Harga belum diisi: user tidak bisa mengambil job ini.</p>' : '') +
-            '<label>Nama job<input class="f-name" maxlength="40" value="' + escapeHtml(j.name) + '"></label>' +
-            '<label>Harga per email<input class="f-price" type="text" inputmode="numeric" autocomplete="off" placeholder="Rp 1,500" value="' + (j.price > 0 ? fmtRp(j.price) : '') + '"></label>' +
-            '<label>Maks email per pengambilan<input class="f-max" type="number" min="1" max="100" value="' + j.maxPerClaim + '"></label>' +
-            '<label>Teks job (tampil ke user setelah klik Ambil Job)<textarea class="f-instruction" maxlength="3000" style="min-height:120px" placeholder="Tulis perintah/teks yang harus dikerjakan user">' + escapeHtml(j.instruction || '') + '</textarea></label>' +
-            '<div class="jb-actions" style="margin-bottom:14px">' +
-            '<button class="btn btn-primary" data-act="save">Simpan</button>' +
-            '<button class="btn btn-outline" data-act="OPEN">Open</button>' +
-            '<button class="btn btn-outline" data-act="CLOSE">Close</button>' +
-            '<button class="btn btn-outline" data-act="delete">Hapus</button></div>' +
-            '<label>Tambah email (satu per baris)<textarea class="f-emails" placeholder="a@gmail.com&#10;b@gmail.com"></textarea></label>' +
-            '<button class="btn btn-primary btn-wide" data-act="add">Tambah ke ' + j.id.toUpperCase() + '</button>' +
-            '<label style="margin-top:14px">Hapus email (satu per baris)<textarea class="f-rmemails" placeholder="a@gmail.com&#10;b@gmail.com"></textarea></label>' +
-            '<div class="jb-actions">' +
-            '<button class="btn btn-outline" data-act="rmemails">Hapus email ini</button>' +
-            '<button class="btn btn-outline" data-act="rmall">Hapus semua email tersedia</button></div></div>';
-        }).join('') || '<p class="jb-stock">Belum ada job. Tambahkan job baru di atas.</p>';
+      async function copyText(text) {
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch (_) {
+          var ta = document.createElement('textarea');
+          ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+          document.body.appendChild(ta); ta.select();
+          var ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          if (!ok) throw new Error('fail');
+        }
+      }
+      async function copyOut(text, okMsg) {
+        try { await copyText(text); say(okMsg); } catch (_) { say('Gagal menyalin. Coba lagi.', true); }
+      }
 
-        document.getElementById('jobClaimRows').innerHTML = d.claims.length ? d.claims.map(function (c) {
-          var open = c.status === 'Diambil' || c.status === 'Menunggu';
-          return '<tr><td>' + escapeHtml(dateText(c.createdAt)) + '</td><td>' + escapeHtml(c.userName) + '</td>' +
-            '<td>' + c.jobId.toUpperCase() + '</td><td style="word-break:break-all;white-space:pre-wrap">' + c.emails.map(escapeHtml).join('\n') + '</td>' +
-            '<td>' + money(c.total) + '</td><td><span class="' + statusClass(c.status) + '">' + escapeHtml(c.status) + '</span></td><td>' +
-            (open ? '<button class="btn btn-primary" data-claim="' + c.id + '" data-st="Disetujui">Setujui</button> ' +
-                    '<button class="btn btn-outline" data-claim="' + c.id + '" data-st="Ditolak">Tolak</button>' : '') +
-            '</td></tr>';
-        }).join('') : '<tr><td colspan="7">Belum ada pengambilan.</td></tr>';
+      function pill(state) {
+        var c = state === 'Diterima' ? 'st-ok' : (state === 'Ditolak' ? 'st-bad' : 'st-wait');
+        return '<span class="st-pill ' + c + '">' + escapeHtml(state) + '</span>';
+      }
+
+      function boxHtml(j) {
+        return '<div class="jb-box" data-job="' + j.id + '">' +
+          '<div class="panel-heading" style="margin-bottom:8px"><h2>' + j.id.toUpperCase() + '</h2>' +
+          '<span class="btn ' + (j.status === 'OPEN' ? 'btn-primary' : 'btn-outline') + '" style="cursor:default">' + j.status + '</span></div>' +
+          '<p class="jb-stock">Total ' + j.total + ' · Tersedia ' + j.available + ' · Diambil ' + j.taken + ' · Selesai ' + j.done + ' · Ditolak ' + j.rejected + ' · Kuota terpakai ' + j.usedPct + '%</p>' +
+          (j.price <= 0 ? '<p class="message error">Harga belum diisi: user tidak bisa mengambil job ini.</p>' : '') +
+          '<label>Nama job<input class="f-name" maxlength="40" value="' + escapeHtml(j.name) + '"></label>' +
+          '<label>Harga per email<input class="f-price" type="text" inputmode="numeric" autocomplete="off" placeholder="Rp 1,500" value="' + (j.price > 0 ? fmtRp(j.price) : '') + '"></label>' +
+          '<label>Maks email per pengambilan<input class="f-max" type="number" min="1" max="100" value="' + j.maxPerClaim + '"></label>' +
+          '<label>Teks job (tampil ke user setelah klik Ambil Job)<textarea class="f-instruction" maxlength="3000" style="min-height:120px" placeholder="Tulis perintah/teks yang harus dikerjakan user">' + escapeHtml(j.instruction || '') + '</textarea></label>' +
+          '<div class="jb-actions" style="margin-bottom:14px">' +
+          '<button class="btn btn-primary" data-act="save">Simpan</button>' +
+          '<button class="btn btn-outline" data-act="OPEN">Open</button>' +
+          '<button class="btn btn-outline" data-act="CLOSE">Close</button>' +
+          '<button class="btn btn-outline" data-act="quota">Reset kuota</button>' +
+          '<button class="btn btn-outline jb-danger" data-act="reset">Reset job ini</button>' +
+          '<button class="btn btn-outline jb-danger" data-act="delete">Hapus</button></div>' +
+          '<label>Tambah email (satu per baris)<textarea class="f-emails" placeholder="a@gmail.com&#10;b@gmail.com"></textarea></label>' +
+          '<button class="btn btn-primary btn-wide" data-act="add">Tambah ke ' + j.id.toUpperCase() + '</button>' +
+          '<label style="margin-top:14px">Hapus email stok (satu per baris)<textarea class="f-rmemails" placeholder="a@gmail.com&#10;b@gmail.com"></textarea></label>' +
+          '<div class="jb-actions">' +
+          '<button class="btn btn-outline" data-act="rmemails">Hapus email ini</button>' +
+          '<button class="btn btn-outline" data-act="rmall">Hapus semua email tersedia</button></div></div>';
+      }
+
+      function claimRow(c, mode) {
+        var open = c.status === 'Diambil' || c.status === 'Menunggu';
+        return '<tr><td>' + escapeHtml(dateText(c.createdAt)) + '</td><td>' + escapeHtml(c.userName) + '</td>' +
+          '<td>' + c.jobId.toUpperCase() + '</td><td style="word-break:break-all;white-space:pre-wrap">' + c.emails.map(escapeHtml).join('\n') + '</td>' +
+          '<td>' + money(c.total) + '</td><td><span class="' + statusClass(c.status) + '">' + escapeHtml(c.status) + '</span></td><td>' +
+          (open ? '<button class="btn btn-outline" data-claim-del="' + c.id + '" data-active="1">Reset</button>'
+                : '<button class="btn btn-outline" data-claim-del="' + c.id + '">Hapus</button>') +
+          '</td></tr>';
+      }
+
+      function storanHtml(j, d) {
+        var list = j.storan || [];
+        var pending = d.claims.filter(function (c) { return c.jobId === j.id && c.status === 'Menunggu'; });
+        var wait = list.filter(function (x) { return x.state === 'Menunggu'; }).length;
+        var ok = list.filter(function (x) { return x.state === 'Diterima'; }).length;
+        var bad = list.filter(function (x) { return x.state === 'Ditolak'; }).length;
+        var unused = ok + bad;
+
+        return '<div class="jb-box" data-storan="' + j.id + '">' +
+          '<div class="panel-heading" style="margin-bottom:8px"><h2>' + j.id.toUpperCase() + ' · Storan</h2>' +
+          '<span class="btn btn-outline" style="cursor:default">' + list.length + ' email</span></div>' +
+          '<p class="jb-stock">' + escapeHtml(j.name) + ' · Menunggu ' + wait + ' · Diterima ' + ok + ' · Ditolak ' + bad + '</p>' +
+
+          (pending.length ? pending.map(function (c) {
+            return '<div class="st-claim"><b>' + escapeHtml(c.userName) + '</b> · ' + c.qty + ' email · ' + money(c.total) +
+              '<div class="jb-actions" style="margin-top:8px">' +
+              '<button class="btn btn-primary" data-claim="' + c.id + '" data-st="Disetujui">Setujui</button>' +
+              '<button class="btn btn-outline" data-claim="' + c.id + '" data-st="Ditolak">Tolak</button>' +
+              '<button class="btn btn-outline" data-claim-del="' + c.id + '" data-active="1">Reset</button></div></div>';
+          }).join('') : '') +
+
+          '<div class="st-bar">' +
+          '<button class="btn btn-primary" data-copy-all="' + j.id + '"' + (list.length ? '' : ' disabled') + '>Salin semua email storan</button>' +
+          '<button class="btn btn-outline jb-danger" data-st-unused="' + j.id + '"' + (unused ? '' : ' disabled') + '>Hapus semua tidak terpakai (' + unused + ')</button></div>' +
+
+          '<div class="st-list">' + (list.length ? list.map(function (x) {
+            return '<div class="st-row">' +
+              '<button class="st-copy" data-copy="' + escapeHtml(x.email) + '" title="Ketuk untuk menyalin"><span>' + escapeHtml(x.email) + '</span>' + pill(x.state) + '</button>' +
+              '<button class="st-del" data-st-del="' + escapeHtml(x.email) + '" data-job="' + j.id + '"' + (x.state === 'Menunggu' ? ' disabled title="Masih menunggu pemeriksaan"' : '') + '>Hapus</button></div>';
+          }).join('') : '<p class="jb-stock">Belum ada email storan.</p>') + '</div></div>';
+      }
+
+      function render(d) {
+        lastData = d;
+        document.getElementById('jobAdminBoxes').innerHTML = d.jobs.map(boxHtml).join('') ||
+          '<p class="jb-stock">Belum ada job. Tambahkan job baru di atas.</p>';
+
+        var active = d.claims.filter(function (c) { return c.status === 'Diambil'; });
+        var finals = d.claims.filter(function (c) { return c.status === 'Disetujui' || c.status === 'Ditolak'; });
+
+        document.getElementById('jobClaimRows').innerHTML = active.length ? active.map(function (c) { return claimRow(c); }).join('')
+          : '<tr><td colspan="7">Tidak ada email yang sedang dikerjakan.</td></tr>';
+
+        document.getElementById('jobStoranBoxes').innerHTML = d.jobs.map(function (j) { return storanHtml(j, d); }).join('') ||
+          '<p class="jb-stock">Belum ada job.</p>';
+
+        document.getElementById('jobHistoryRows').innerHTML = finals.length ? finals.map(function (c) { return claimRow(c); }).join('')
+          : '<tr><td colspan="7">Belum ada riwayat selesai.</td></tr>';
       }
 
       async function load() {
@@ -172,9 +296,61 @@
       }
 
       root.addEventListener('click', async function (e) {
-        var t = e.target;
+        var t = e.target.closest('button');
+        if (!t || t.disabled) return;
+
+        // ----- tombol sistem (reset / bersihkan) -----
+        var sys = t.getAttribute('data-sys');
+        if (sys === 'reset-all') {
+          var w = prompt('RESET SEMUA JOB akan menghapus SEMUA stok email, storan, dan catatan pengambilan, lalu mengembalikan nama/harga/teks/status semua job ke awal. Saldo pengguna TIDAK berubah.\n\nKetik RESET untuk melanjutkan:');
+          if (w === null) return;
+          if (w.trim().toUpperCase() !== 'RESET') { say('Reset dibatalkan: kata konfirmasi salah.', true); return; }
+          return run('adminJobReset', { jobId: 'all' });
+        }
+        if (sys === 'quota-all') {
+          if (confirm('Reset kuota SEMUA job di dashboard pengguna? Tampilan kembali kosong (0%). Email tidak dihapus.')) return run('adminJobQuotaReset', { jobId: 'all' });
+          return;
+        }
+        if (sys === 'clear-history') {
+          if (confirm('Hapus semua riwayat pengambilan yang sudah Disetujui/Ditolak? Saldo tidak berubah.')) return run('adminJobClaimsClear', {});
+          return;
+        }
+
+        // ----- storan: salin & hapus -----
+        if (t.hasAttribute('data-copy')) return copyOut(t.getAttribute('data-copy'), 'Email disalin');
+        if (t.hasAttribute('data-copy-all')) {
+          var jc = lastData && lastData.jobs.filter(function (x) { return x.id === t.getAttribute('data-copy-all'); })[0];
+          var all = jc ? (jc.storan || []).map(function (x) { return x.email; }) : [];
+          if (!all.length) { say('Belum ada email storan.', true); return; }
+          return copyOut(all.join('\n'), all.length + ' email storan disalin');
+        }
+        if (t.hasAttribute('data-st-del')) {
+          var em = t.getAttribute('data-st-del');
+          if (confirm('Hapus ' + em + ' dari storan? Email ini bisa ditambahkan lagi ke stok.')) {
+            return run('adminStoranDelete', { jobId: t.getAttribute('data-job'), emails: em });
+          }
+          return;
+        }
+        if (t.hasAttribute('data-st-unused')) {
+          var jid = t.getAttribute('data-st-unused');
+          if (confirm('Hapus SEMUA email storan ' + jid.toUpperCase() + ' yang sudah tidak terpakai (Diterima/Ditolak)? Yang menunggu pemeriksaan tidak ikut terhapus.')) {
+            return run('adminStoranDelete', { jobId: jid, mode: 'unused' });
+          }
+          return;
+        }
+
+        // ----- pengambilan / riwayat -----
+        if (t.getAttribute('data-claim-del')) {
+          var isActive = t.getAttribute('data-active');
+          var q = isActive ? 'Reset pengambilan ini? Email dikembalikan ke stok dan pengambilan dibatalkan TANPA pembayaran.'
+                           : 'Hapus catatan riwayat ini? Saldo tidak berubah.';
+          if (confirm(q)) return run('adminJobClaimDelete', { id: t.getAttribute('data-claim-del') });
+          return;
+        }
         if (t.getAttribute('data-all')) return run('adminJobSetStatus', { jobId: 'all', status: t.getAttribute('data-all') });
         if (t.getAttribute('data-claim')) return run('adminJobClaimUpdate', { id: t.getAttribute('data-claim'), status: t.getAttribute('data-st') });
+
+        // ----- tombol di kotak job -----
         var act = t.getAttribute('data-act');
         if (!act) return;
         var box = t.closest('.jb-box');
@@ -194,6 +370,16 @@
         else if (act === 'rmall') {
           if (confirm('Hapus SEMUA email yang masih tersedia di ' + id.toUpperCase() + '? Email yang sudah diambil user tidak ikut terhapus.')) {
             run('adminJobRemoveEmails', { jobId: id, mode: 'allAvailable' });
+          }
+        }
+        else if (act === 'quota') {
+          if (confirm('Reset kuota ' + id.toUpperCase() + ' di dashboard pengguna? Tampilan kembali kosong (0%). Email tidak dihapus.')) {
+            run('adminJobQuotaReset', { jobId: id });
+          }
+        }
+        else if (act === 'reset') {
+          if (confirm('Reset ' + id.toUpperCase() + '? Semua stok email, storan, dan pengambilan job ini dihapus. Nama/harga/teks tetap. Saldo pengguna tidak berubah.')) {
+            run('adminJobReset', { jobId: id });
           }
         }
         else if (act === 'delete') {
