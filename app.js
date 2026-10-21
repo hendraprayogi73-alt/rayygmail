@@ -44,6 +44,14 @@ function statusClass(status) {
   return 'status';
 }
 
+// Status storan (job) untuk tampilan pengguna:
+// Disetujui = Diterima, Diambil (sedang dikerjakan) = Diproses.
+function claimLabel(status) {
+  if (status === 'Disetujui') return 'Diterima';
+  if (status === 'Diambil') return 'Diproses';
+  return status;
+}
+
 function setMessage(id, message, isError = false) {
   const el = $(id);
   if (!el) return;
@@ -245,8 +253,14 @@ async function initDashboard() {
 
   async function load() {
     try {
-      const data = await api('dashboard', { token: getToken() });
-      const subs = data.submissions;
+      // Data dashboard + data storan (job) diambil bersamaan.
+      const [data, jobs] = await Promise.all([
+        api('dashboard', { token: getToken() }),
+        api('jobList', { token: getToken() }).catch(() => null)
+      ]);
+
+      const claims = (jobs && jobs.claims) || [];
+      const js = (jobs && jobs.stats) || { total: 0, approved: 0, pending: 0, processing: 0, rejected: 0 };
 
       currentBalance = Number(data.user.balance) || 0;
       minWithdrawal = Number(data.minWithdrawal) || 1000;
@@ -255,33 +269,36 @@ async function initDashboard() {
       $('userName').textContent = data.user.name;
       $('profileName').textContent = data.user.name;
       $('profileEmail').textContent = data.user.email;
-      $('profileTotal').textContent = data.stats.total;
+      $('profileTotal').textContent = js.total;
       document.querySelectorAll('.js-balance').forEach(el => {
         el.textContent = money(currentBalance);
       });
 
-      $('statApproved').textContent = data.stats.approved;
-      $('statPending').textContent = subs.filter(s => s.status === 'Menunggu').length;
-      $('statProcess').textContent = subs.filter(s => s.status === 'Diproses').length;
-      $('statRejected').textContent = subs.filter(s => s.status === 'Ditolak').length;
+      // Statistik berdasarkan storan (job yang diambil pengguna).
+      $('statApproved').textContent = js.approved;
+      $('statPending').textContent = js.pending;
+      $('statProcess').textContent = js.processing;
+      $('statRejected').textContent = js.rejected;
 
-      $('recentActivity').innerHTML = subs.slice(0, 5).map(s => `
+      // Aktivitas terbaru = storan terbaru.
+      $('recentActivity').innerHTML = claims.slice(0, 5).map(c => `
         <div class="activity-item">
-          <div><strong>${escapeHtml(s.type)}</strong>
-            <p>${escapeHtml(s.reference)}</p>
-            <small>${escapeHtml(dateText(s.createdAt))}</small>
+          <div><strong>${escapeHtml(c.jobName || c.jobId)}</strong>
+            <p>${escapeHtml(c.qty)} email · ${escapeHtml(money(c.total))}</p>
+            <small>${escapeHtml(dateText(c.createdAt))}</small>
           </div>
-          <span class="${statusClass(s.status)}">${escapeHtml(s.status)}</span>
+          <span class="${statusClass(c.status)}">${escapeHtml(claimLabel(c.status))}</span>
         </div>`).join('') || '<div class="empty-state">Belum ada aktivitas.</div>';
 
-      $('submissionRows').innerHTML = subs.map(s => `
+      // Riwayat storan.
+      $('submissionRows').innerHTML = claims.map(c => `
         <tr>
-          <td>${escapeHtml(dateText(s.createdAt))}</td>
-          <td>${escapeHtml(s.type)}</td>
-          <td>${escapeHtml(s.reference)}</td>
-          <td><span class="${statusClass(s.status)}">${escapeHtml(s.status)}</span></td>
-          <td>${escapeHtml(s.adminNote || '-')}</td>
-        </tr>`).join('') || '<tr><td colspan="5">Belum ada pengajuan.</td></tr>';
+          <td>${escapeHtml(dateText(c.createdAt))}</td>
+          <td>${escapeHtml(c.jobName || c.jobId)}</td>
+          <td>${escapeHtml(c.qty)} email</td>
+          <td>${escapeHtml(money(c.total))}</td>
+          <td><span class="${statusClass(c.status)}">${escapeHtml(claimLabel(c.status))}</span></td>
+        </tr>`).join('') || '<tr><td colspan="5">Belum ada storan.</td></tr>';
 
       $('transactionRows').innerHTML = data.transactions.map(t => `
         <tr>
@@ -405,10 +422,18 @@ async function initAdmin() {
 
   async function load() {
     try {
-      const data = await api('adminOverview', { token: getToken() });
+      // Data admin + data storan (job) diambil bersamaan.
+      const [data, jobs] = await Promise.all([
+        api('adminOverview', { token: getToken() }),
+        api('adminJobOverview', { token: getToken() }).catch(() => null)
+      ]);
+
       $('adminUserCount').textContent = data.stats.users;
-      $('adminSubmissionCount').textContent = data.stats.submissions;
-      $('adminPendingCount').textContent = data.stats.pending;
+      // Pengajuan = storan job pengguna.
+      $('adminSubmissionCount').textContent = jobs ? jobs.claims.length : data.stats.submissions;
+      $('adminPendingCount').textContent = jobs
+        ? jobs.claims.filter(c => c.status === 'Menunggu').length
+        : data.stats.pending;
 
       $('adminUserRows').innerHTML = data.users.map(u => `
         <tr>
