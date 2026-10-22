@@ -292,6 +292,12 @@
     }
     function say(t, err) { msg.textContent = t || ''; msg.className = 'message' + (err ? ' error' : ''); }
     function isActive(c) { return c.status === 'Diambil' || c.status === 'Menunggu'; }
+    // Jumlah email pada sebuah pengambilan: tahan jika qty dikirim sebagai teks (BARU)
+    function claimQty(c) {
+      var n = Number(c && c.qty);
+      if (!isFinite(n) || n < 1) n = ((c && c.emails) || []).length;
+      return n;
+    }
     function activeClaim(d, jobId) {
       return d.claims.filter(function (c) { return c.jobId === jobId && isActive(c); })[0] || null;
     }
@@ -366,7 +372,7 @@
     // Tombol "Tambah job Gmail" (BARU): muncul jika pengguna hanya mengambil 1 email.
     // Menampilkan job lain yang bisa diambil langsung dari kartu ini.
     function addJobHtml(ac) {
-      if (!data || ac.qty !== 1) return '';
+      if (!data || claimQty(ac) !== 1) return '';
       var others = data.jobs.filter(function (x) {
         return x.id !== ac.jobId && !activeClaim(data, x.id);
       });
@@ -390,10 +396,10 @@
     // hanya pengambilan dengan lebih dari 1 email. Jika semua pengambilan aktif
     // hanya 1 email, pengguna boleh mengambil / menambah job lain.
     function blockingClaims(d) {
-      return d.claims.filter(function (c) { return isActive(c) && c.qty > 1; });
+      return d.claims.filter(function (c) { return isActive(c) && claimQty(c) > 1; });
     }
     function smallClaims(d) {
-      return d.claims.filter(function (c) { return isActive(c) && c.qty === 1; });
+      return d.claims.filter(function (c) { return isActive(c) && claimQty(c) === 1; });
     }
 
     function takeHtml(j, d) {
