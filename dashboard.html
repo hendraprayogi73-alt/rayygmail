@@ -200,6 +200,10 @@
     .jb-notice pre{margin:0;white-space:pre-wrap;word-break:break-word;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;color:#78350f}
     .jb-info{background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d;margin-top:10px}
 
+    /* Bagian "Tambah job Gmail" (BARU) */
+    .jb-addjob{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+    .jb-addjob > .muted{margin:0 0 4px;text-align:center}
+
     /* Pemberitahuan storan ditutup (BARU) */
     .jb-locked{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;margin-top:10px}
     .jb-locked b{color:#991b1b}
@@ -262,6 +266,7 @@
     var toastTimer = 0;
     var openId = '';
     var autoOpened = false;
+    var addOpen = false; // daftar "Tambah job Gmail" terbuka atau tidak (BARU)
     var qty = {};
     var deposit = {};
     var data = null;
@@ -354,7 +359,31 @@
           ? (storanOpen(ac.jobId)
               ? depositHtml(ac) + btn('finish', '✓ Tandai selesai (setor semua)', 'success', ac.id)
               : lockedHtml())
-          : '<div class="jb-notice jb-info">Menunggu pemeriksaan admin.</div>');
+          : '<div class="jb-notice jb-info">Menunggu pemeriksaan admin.</div>') +
+        addJobHtml(ac);
+    }
+
+    // Tombol "Tambah job Gmail" (BARU): muncul jika pengguna hanya mengambil 1 email.
+    // Menampilkan job lain yang bisa diambil langsung dari kartu ini.
+    function addJobHtml(ac) {
+      if (!data || ac.qty !== 1) return '';
+      var others = data.jobs.filter(function (x) {
+        return x.id !== ac.jobId && !activeClaim(data, x.id);
+      });
+      var body = '';
+      if (addOpen) {
+        body = others.length ? others.map(function (x) {
+          return '<div class="jb-card" style="margin:10px 0 0">' +
+            '<div class="jb-top"><div><strong class="jb-title">' + escapeHtml(x.name) + '</strong> ' +
+            '<span class="badge ' + (x.status === 'OPEN' ? 'ok' : 'warn') + '">' + (x.status === 'OPEN' ? 'Buka' : 'Tutup') + '</span>' +
+            '<div class="jb-sub">' + x.available + ' sisa · <span class="jb-price">' + money(x.price) + '/email</span></div></div></div>' +
+            '<div style="margin-top:10px">' + takeHtml(x, data) + '</div></div>';
+        }).join('') : '<p class="muted">Tidak ada job lain yang tersedia saat ini.</p>';
+      }
+      return '<div class="jb-addjob">' +
+        '<p class="muted">Anda hanya mengambil 1 email, jadi boleh menambah job Gmail lain tanpa menyelesaikan yang ini.</p>' +
+        btn('add-toggle', addOpen ? '▲ Tutup daftar job' : '➕ Tambah job Gmail', addOpen ? '' : 'primary') +
+        body + '</div>';
     }
 
     // Pengambilan aktif yang membuat pengguna harus menyelesaikan dulu (BARU):
@@ -538,6 +567,11 @@
         if (data) render(data);
         return;
       }
+      if (act === 'add-toggle') {
+        addOpen = !addOpen;
+        if (data) render(data);
+        return;
+      }
       if (act === 'qty-' || act === 'qty+') {
         var max = Number(el.getAttribute('data-max')) || 1;
         var cur = qty[val] || 1;
@@ -594,7 +628,7 @@
           var d = act === 'claim'
             ? await api('jobClaim', { token: getToken(), jobId: val, qty: qty[val] || 1 })
             : await api('jobFinish', { token: getToken(), id: val });
-          if (act === 'claim') openId = val;
+          if (act === 'claim') { openId = val; addOpen = false; }
           toast(d.message || 'Berhasil');
           say('');
         } catch (err) {
