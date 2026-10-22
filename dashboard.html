@@ -742,19 +742,71 @@
     </section>
 
     <!-- ===== HALAMAN BARU: RULES, S&K, LEADERBOARD ===== -->
+    <!-- ===== RULES STORAN GMAIL (DIUBAH: isi lengkap bergaya kartu) ===== -->
     <section class="view" data-view="rules">
-      <div class="card">
-        <h2 class="card-title">Rules</h2>
-        <ol class="muted" style="padding-left:18px;line-height:1.7">
-          <li>Kerjakan hanya Gmail dari job yang Anda ambil.</li>
-          <li>Jangan pernah mengirim kata sandi, OTP, atau kode pemulihan.</li>
-          <li>Setor hasil job sebelum batas waktu yang ditentukan admin.</li>
-          <li>Gmail yang tidak disetor tidak dibayar.</li>
-          <li>Penarikan saldo diproses setelah diperiksa admin.</li>
-        </ol>
-        <button class="btn" type="button" data-open="home">← Kembali</button>
+      <style>
+        .rl-head{margin:2px 2px 16px}
+        .rl-head h2{margin:0 0 6px;font-size:24px;letter-spacing:-.02em}
+        .rl-head p{margin:0;font-size:13px;color:var(--muted)}
+        .rl-card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:14px;
+          box-shadow:0 8px 24px rgba(15,23,42,.06)}
+        .rl-title{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+        .rl-title h3{margin:0;font-size:17px;letter-spacing:-.01em}
+        .rl-ico{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:15px;font-weight:800;
+          background:#dcfce7;color:#047857;border:1px solid #bbf7d0}
+        .rl-ico.warn{background:#fef3c7;color:#92400e;border-color:#fde68a}
+        .rl-steps{list-style:none;margin:0;padding:0;counter-reset:rl}
+        .rl-steps li{position:relative;counter-increment:rl;padding:0 0 0 40px;margin:0 0 14px;font-size:14px;line-height:1.6}
+        .rl-steps li:last-child{margin-bottom:0}
+        .rl-steps li::before{content:counter(rl);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;
+          display:grid;place-items:center;font-size:13px;font-weight:800;color:#052e1b;
+          background:linear-gradient(135deg,var(--blue),var(--blue2))}
+        .rl-steps a{color:var(--blue);font-weight:700;text-decoration:underline;overflow-wrap:anywhere}
+        .rl-pass{display:inline-block;margin:2px 0;padding:3px 10px;border-radius:8px;background:#f1f5f9;border:1px solid var(--line);
+          font:700 13px ui-monospace,Menlo,Consolas,monospace;color:var(--ink)}
+        .rl-sub{display:block;font-size:12px;color:var(--muted)}
+        .rl-notes{margin:0;padding-left:20px;font-size:13px;line-height:1.6;color:#78350f}
+        .rl-notes li{margin:6px 0}
+        .rl-warn{background:#fffbeb;border-color:#fde68a}
+        .rl-back{display:block;width:100%;margin-top:4px;padding:15px;border:0;border-radius:16px;font-weight:800;font-size:14px;cursor:pointer;
+          color:#052e1b;background:linear-gradient(135deg,var(--blue),var(--blue2));box-shadow:0 10px 24px rgba(5,150,105,.25)}
+        .rl-back:active{transform:scale(.99)}
+        .rl-sec{display:block;width:100%;margin-top:10px;padding:13px;border:1px solid var(--line);border-radius:16px;
+          background:#fff;font-weight:700;font-size:13px;cursor:pointer;color:var(--ink)}
+      </style>
+
+      <div class="rl-head">
+        <h2>📋 Rules Storan Gmail</h2>
+        <p>Baca dan patuhi semua rules berikut sebelum melakukan storan.</p>
       </div>
+
+      <div class="rl-card">
+        <div class="rl-title"><span class="rl-ico">✓</span><h3>Ketentuan Akun</h3></div>
+        <ol class="rl-steps">
+          <li>Gmail harus <b>Fresh</b> (baru dibuat).</li>
+          <li>Nama Gmail yang didaftarkan wajib sama persis dengan nama Gmail hasil Generate di website. Tidak boleh mengubah, menambah, atau mengurangi karakter apa pun.</li>
+          <li>Tanggal lahir akun Gmail wajib 18 tahun ke atas.</li>
+          <li>Password Gmail wajib menggunakan: <span class="rl-pass">zero1122</span>
+            <span class="rl-sub">(Pilih salah satu pasword)</span></li>
+          <li>Akun tidak boleh ditautkan dengan nomor pemulihan maupun Gmail pemulihan.</li>
+          <li>Sebelum melakukan storan, cek status Gmail di
+            <a href="https://en.gmailcheck.com/" target="_blank" rel="noopener noreferrer">https://en.gmailcheck.com/</a></li>
+          <li>Hanya kirim Gmail dengan status <b>Live/Aktif</b>.</li>
+        </ol>
+      </div>
+
+      <div class="rl-card rl-warn">
+        <div class="rl-title"><span class="rl-ico warn">!</span><h3>Catatan</h3></div>
+        <ul class="rl-notes">
+          <li>Status di checkgmail.online hanya digunakan untuk memastikan Gmail masih aktif, bukan penentu diterima atau ditolaknya Gmail saat pengecekan admin.</li>
+          <li>Gmail yang tidak sesuai rules atau berbeda dengan hasil Generate di website akan ditolak dan akun dapat diblokir oleh admin.</li>
+        </ul>
+      </div>
+
+      <button class="rl-back" type="button" data-open="deposit">Saya sudah paham, lanjut setor</button>
+      <button class="rl-sec" type="button" data-open="home">← Kembali ke Beranda</button>
     </section>
+    <!-- ===== AKHIR RULES STORAN GMAIL ===== -->
 
     <!-- ===== SYARAT & KETENTUAN (DIUBAH: isi lengkap bergaya kartu) ===== -->
     <section class="view" data-view="terms">
