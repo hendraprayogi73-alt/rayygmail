@@ -6,6 +6,16 @@
   <meta name="theme-color" content="#1d4ed8">
   <title>RAYYGMAIL — Masuk</title>
   <link rel="stylesheet" href="/login.css">
+  <style>
+    /* ===== LOGIN GOOGLE (BARU) ===== */
+    .auth-divider{display:flex;align-items:center;gap:12px;margin:18px 0 14px;color:#64748b;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+    .auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:#e2e8f0}
+    .google-wrap{display:flex;justify-content:center;min-height:44px}
+    .google-wrap iframe{max-width:100%}
+    .google-fallback{display:none;width:100%;align-items:center;justify-content:center;gap:10px;min-height:46px;border:1px solid #dadce0;border-radius:12px;background:#fff;color:#3c4043;font-weight:600;font-size:14px;cursor:pointer}
+    .google-fallback svg{flex:none}
+    .google-fallback:disabled{opacity:.6;cursor:not-allowed}
+  </style>
 </head>
 <body>
   <div class="ambient ambient-one"></div>
@@ -56,11 +66,113 @@
           <button class="btn btn-primary btn-wide" id="authSubmit" type="submit">Masuk →</button>
         </form>
         <p class="message" id="authMessage" role="status"></p>
+
+        <!-- ===== LOGIN DENGAN GOOGLE (BARU) ===== -->
+        <div class="auth-divider"><span>atau</span></div>
+        <div class="google-wrap" id="googleWrap">
+          <div id="googleBtn"></div>
+        </div>
+        <button class="google-fallback" id="googleFallback" type="button">
+          <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.99 23.99 0 0 0 0 24c0 3.77.9 7.35 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+          <span>Lanjutkan dengan Google</span>
+        </button>
+        <p class="message" id="googleMessage" role="status"></p>
+        <!-- ===== AKHIR LOGIN DENGAN GOOGLE (BARU) ===== -->
       </div>
     </section>
   </main>
 
   <footer class="footer">© <span id="year"></span> RAYYGMAIL · Gunakan layanan dengan baik.</footer>
+
+  <!-- ===== SKRIP LOGIN GOOGLE (BARU) ===== -->
+  <!-- GANTI: GOOGLE_CLIENT_ID dengan Client ID dari Google Cloud Console -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var GOOGLE_CLIENT_ID = 'GANTI_DENGAN_CLIENT_ID.apps.googleusercontent.com';
+
+    var msg = document.getElementById('googleMessage');
+    var wrap = document.getElementById('googleWrap');
+    var fallback = document.getElementById('googleFallback');
+    var busy = false;
+
+    function say(t, err) {
+      msg.textContent = t || '';
+      msg.className = 'message' + (err ? ' error' : '');
+    }
+
+    function showFallback(text) {
+      wrap.style.display = 'none';
+      fallback.style.display = 'flex';
+      fallback.onclick = function () { say(text, true); };
+    }
+
+    // Dipanggil Google setelah pengguna memilih akun
+    async function onCredential(resp) {
+      if (busy || !resp || !resp.credential) return;
+      busy = true;
+      say('Memproses…');
+      try {
+        // Server memverifikasi ID token Google lalu membuat/mencari akun
+        var d = await api('googleLogin', { credential: resp.credential });
+
+        // Simpan sesi sama seperti login email biasa
+        if (typeof setToken === 'function') {
+          setToken(d.token);
+        } else if (d.token) {
+          // SESUAIKAN: kunci penyimpanan harus sama dengan yang dipakai getToken() di app.js
+          try { localStorage.setItem('token', d.token); } catch (_) {}
+        }
+
+        say('Berhasil masuk. Mengalihkan…');
+        var role = d.role || (d.user && d.user.role) || '';
+        window.location.href = String(role).toLowerCase() === 'admin' ? '/admin' : '/dashboard';
+      } catch (e) {
+        say((e && e.message) || 'Login Google gagal. Coba lagi.', true);
+        busy = false;
+      }
+    }
+
+    function init() {
+      if (GOOGLE_CLIENT_ID.indexOf('GANTI_') === 0) {
+        showFallback('Login Google belum dikonfigurasi: isi GOOGLE_CLIENT_ID.');
+        return;
+      }
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: onCredential,
+        ux_mode: 'popup',
+        auto_select: false
+      });
+      var width = Math.min(400, Math.max(200, wrap.clientWidth || 320));
+      google.accounts.id.renderButton(document.getElementById('googleBtn'), {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        text: 'continue_with',
+        shape: 'rectangular',
+        logo_alignment: 'left',
+        width: width,
+        locale: 'id'
+      });
+    }
+
+    // Tunggu skrip Google selesai dimuat (maksimal sekitar 10 detik)
+    var tries = 0;
+    var timer = setInterval(function () {
+      tries++;
+      if (window.google && google.accounts && google.accounts.id) {
+        clearInterval(timer);
+        init();
+      } else if (tries > 100) {
+        clearInterval(timer);
+        showFallback('Login Google tidak bisa dimuat. Periksa koneksi internet Anda.');
+      }
+    }, 100);
+  });
+  </script>
+  <!-- ===== AKHIR SKRIP LOGIN GOOGLE (BARU) ===== -->
+
   <script src="/app.js"></script>
 </body>
 </html>
