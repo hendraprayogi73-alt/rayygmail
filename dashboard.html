@@ -226,6 +226,14 @@
     .jb-deposit textarea{width:100%;min-height:120px;margin:8px 0;padding:10px;border:1px solid var(--line);border-radius:12px;
       font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;resize:vertical;box-sizing:border-box;background:#f8fafc;color:var(--ink)}
     .jb-deposit textarea:focus{outline:2px solid #86efac;background:#fff}
+
+    /* Status tiap email storan (BARU) */
+    .jb-es{margin-top:10px;display:grid;gap:6px}
+    .jb-es-row{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#f1f5f9;border-radius:10px;padding:8px 10px}
+    .jb-es-row code{font:12px ui-monospace,Menlo,Consolas,monospace;word-break:break-all;flex:1}
+    .jb-es-note{font-size:12px;color:var(--muted);margin:0 0 2px 4px}
+    .jb-pill.bad{background:#fee2e2;border-color:#fecaca;color:#b91c1c}
+    .jb-pill.chk{background:#dbeafe;border-color:#bfdbfe;color:#1e40af}
   </style>
 
   <div id="jobBoard">
@@ -253,6 +261,8 @@
     var qty = {};
     var deposit = {};
     var data = null;
+    var marks = {};
+    var marksJson = '';
     var lastJson = '';
     var internalClick = false;
     var copied = loadCopied();
@@ -374,7 +384,8 @@
 
       document.getElementById('myJobClaims').innerHTML = d.claims.length ? d.claims.map(function (c) {
         return '<div class="jb-card"><div class="jb-top"><strong>' + c.jobId.toUpperCase() + ' · ' + c.qty + ' email · ' + money(c.total) + '</strong>' +
-          '<span class="' + statusClass(c.status) + '">' + escapeHtml(c.status) + '</span></div></div>';
+          '<span class="' + statusClass(c.status) + '">' + escapeHtml(c.status) + '</span></div>' +
+          emailStatusHtml(c) + '</div>';
       }).join('') : '<p class="empty-state">Belum ada job.</p>';
     }
 
@@ -382,7 +393,7 @@
       try {
         var d = await api('jobList', { token: getToken() });
         var json = JSON.stringify(d);
-        if (silent && json === lastJson) return;
+        if (silent && json === lastJson) { loadMarks(d); return; }
         lastJson = json;
         data = d;
         if (!autoOpened) {
@@ -392,12 +403,43 @@
         }
         say('');
         render(d);
+        loadMarks(d);
       } catch (e) {
         if (silent && data) return;
         document.getElementById('jobCards').innerHTML =
           '<div class="jb-notice"><b>Job belum bisa dimuat</b>' + escapeHtml(e.message || 'Terjadi kesalahan.') + '</div>' +
           btn('retry', '↻ Coba lagi', 'primary');
       }
+    }
+
+    // ----- Status tiap email storan (info dari admin) -----
+    function emailStatusHtml(c) {
+      if (c.status === 'Diambil' || !c.emails || !c.emails.length) return '';
+      return '<div class="jb-es">' + c.emails.map(function (e) {
+        var m = marks[String(e).toLowerCase()] || null;
+        var s = m && m.state ? m.state
+          : (c.status === 'Disetujui' ? 'Diterima' : (c.status === 'Ditolak' ? 'Ditolak' : 'Menunggu'));
+        var cls = s === 'Diterima' ? ' done' : (s === 'Ditolak' ? ' bad' : (s === 'Di Cek' ? ' chk' : ''));
+        return '<div><div class="jb-es-row"><code>' + escapeHtml(e) + '</code>' +
+          '<span class="jb-pill' + cls + '">' + (s === 'Menunggu' ? 'Pending' : escapeHtml(s)) + '</span></div>' +
+          (m && m.note ? '<p class="jb-es-note">Info admin: ' + escapeHtml(m.note) + '</p>' : '') + '</div>';
+      }).join('') + '</div>';
+    }
+
+    async function loadMarks(d) {
+      var list = [];
+      d.claims.forEach(function (c) {
+        if (c.status !== 'Diambil') (c.emails || []).forEach(function (e) { list.push(e); });
+      });
+      if (!list.length) return;
+      try {
+        var r = await api('storanStatus', { token: getToken(), emails: list.slice(0, 500).join('\n') });
+        var j = JSON.stringify(r.marks || {});
+        if (j === marksJson) return;
+        marksJson = j;
+        marks = r.marks || {};
+        if (data) render(data);
+      } catch (_) { /* info status bersifat tambahan; abaikan error */ }
     }
 
     function refreshAll() {
