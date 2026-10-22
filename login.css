@@ -79,6 +79,26 @@ input::placeholder { color: #94a3b8; }
 .hidden { display: none !important; }
 .footer { text-align: center; color: var(--muted); padding: 22px; font-size: 11px; border-top: 1px solid var(--line); }
 
+/* ===== LOGIN DENGAN GOOGLE (BARU) ===== */
+.auth-divider {
+  display: flex; align-items: center; gap: 12px; margin: 18px 0 14px;
+  color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+}
+.auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.google-wrap { display: flex; justify-content: center; min-height: 44px; }
+.google-wrap iframe { max-width: 100%; }
+.google-fallback {
+  display: none; width: 100%; align-items: center; justify-content: center; gap: 10px;
+  min-height: 46px; padding: 10px 16px; border: 1px solid #dadce0; border-radius: 14px;
+  background: #fff; color: #3c4043; font-weight: 600; font-size: 14px;
+  transition: transform .2s, box-shadow .2s, background .2s;
+}
+.google-fallback:hover { transform: translateY(-1px); background: #f8fafc; box-shadow: 0 6px 16px rgba(15,23,42,.08); }
+.google-fallback svg { flex: none; }
+.google-fallback:disabled { opacity: .6; cursor: not-allowed; }
+#googleMessage { text-align: center; margin: 10px 0 0; }
+/* ===== AKHIR LOGIN DENGAN GOOGLE (BARU) ===== */
+
 @media (max-width: 850px) {
   .auth-screen { grid-template-columns: 1fr; gap: 30px; max-width: 560px; margin: auto; }
   .auth-intro h1 { font-size: 43px; }
@@ -92,4 +112,5 @@ input::placeholder { color: #94a3b8; }
   .auth-screen { padding: 35px 0; }
   .auth-intro h1 { font-size: 39px; }
   .auth-card { padding: 20px; border-radius: 18px; }
+  .auth-divider { margin: 14px 0 12px; }
 }
