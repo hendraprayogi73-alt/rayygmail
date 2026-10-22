@@ -36,6 +36,48 @@
       <article class="metric-card balance-card"><div class="metric-top"><span>Menunggu pemeriksaan</span><span>◷</span></div><strong id="adminPendingCount">0</strong></article>
     </section>
 
+    <!-- ===== MENU CONTROL (BARU) =====
+         Tombol "Control ..." dibuat otomatis oleh script di bawah dari
+         setiap elemen yang punya atribut data-view. Gaya CSS ada di admin.css. -->
+    <section class="ctl-grid" id="ctlMenu" aria-label="Menu kontrol"></section>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var views = [].slice.call(document.querySelectorAll('[data-view]'));
+      var menu = document.getElementById('ctlMenu');
+
+      function show(id) {
+        views.forEach(function (v) { v.hidden = v.getAttribute('data-view') !== id; });
+        menu.hidden = !!id;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      views.forEach(function (v) {
+        var id = v.getAttribute('data-view');
+        var label = v.getAttribute('data-label');
+
+        // tombol menu "Control ..."
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'ctl-btn';
+        b.innerHTML = '<span class="ctl-ico">' + v.getAttribute('data-icon') + '</span>' +
+          '<span><b>Control ' + label + '</b><small>' + v.getAttribute('data-desc') + '</small></span>';
+        b.addEventListener('click', function () { show(id); });
+        menu.appendChild(b);
+
+        // tombol "Close ..." di dalam tiap tampilan
+        var bar = document.createElement('div');
+        bar.className = 'ctl-close-bar';
+        bar.innerHTML = '<button type="button" class="btn btn-outline">✕ Close ' + label + '</button>';
+        bar.firstChild.addEventListener('click', function () { show(''); });
+        v.insertBefore(bar, v.firstChild);
+      });
+
+      show(''); // tampilan awal: hanya tombol Control
+    });
+    </script>
+    <!-- ===== AKHIR MENU CONTROL (BARU) ===== -->
+
     <!-- "Pengajuan masuk / Referensi" DIHILANGKAN dari tampilan.
          Elemen dibiarkan tersembunyi karena app.js masih mengisi #adminSubmissionRows. -->
     <section class="panel table-panel" style="display:none" aria-hidden="true">
@@ -86,54 +128,72 @@
       .st-chk{background:#dbeafe;color:#1e40af}
     </style>
 
-    <section class="panel table-panel" id="jobAdmin">
-      <div class="panel-heading">
-        <div><h2>Kontrol Job Email</h2><p>Isi stok, atur harga, teks job, buka/tutup, tambah, hapus, dan reset tiap job.</p></div>
-        <div class="jb-actions">
-          <button class="btn btn-outline" data-all="OPEN">Buka semua</button>
-          <button class="btn btn-outline" data-all="CLOSE">Tutup semua</button>
-          <button class="btn btn-outline" data-sys="quota-all">Reset kuota semua</button>
-          <button class="btn btn-outline jb-danger" data-sys="reset-all">Reset semua job</button>
+    <div id="jobAdmin">
+
+      <!-- ===== Control Add Job ===== -->
+      <div class="panel table-panel" data-view="addjob" data-label="Add Job" data-icon="＋" data-desc="Buat job baru">
+        <!-- TAMBAH JOB BARU -->
+        <div class="jb-box" style="margin-bottom:16px">
+          <h3 style="margin:0 0 10px">Tambah job baru</h3>
+          <div class="jb-grid">
+            <label>Nama job<input id="newJobName" maxlength="40" placeholder="Kosongkan = otomatis"></label>
+            <label>Harga per email<input id="newJobPrice" type="text" inputmode="numeric" autocomplete="off" placeholder="Rp 1,500"></label>
+            <label>Maks email per pengambilan<input id="newJobMax" type="number" min="1" max="100" value="10"></label>
+          </div>
+          <label>Teks job<textarea id="newJobText" maxlength="3000" placeholder="Perintah yang harus dikerjakan user"></textarea></label>
+          <button class="btn btn-primary" id="newJobBtn" type="button">+ Tambah job</button>
         </div>
       </div>
 
-      <!-- TAMBAH JOB BARU -->
-      <div class="jb-box" style="margin-bottom:16px">
-        <h3 style="margin:0 0 10px">Tambah job baru</h3>
-        <div class="jb-grid">
-          <label>Nama job<input id="newJobName" maxlength="40" placeholder="Kosongkan = otomatis"></label>
-          <label>Harga per email<input id="newJobPrice" type="text" inputmode="numeric" autocomplete="off" placeholder="Rp 1,500"></label>
-          <label>Maks email per pengambilan<input id="newJobMax" type="number" min="1" max="100" value="10"></label>
+      <!-- ===== Control Atur Job ===== -->
+      <div class="panel table-panel" data-view="jobs" data-label="Atur Job" data-icon="⚙" data-desc="Harga, teks, stok, buka/tutup">
+        <div class="panel-heading">
+          <div><h2>Kontrol Job Email</h2><p>Isi stok, atur harga, teks job, buka/tutup, tambah, hapus, dan reset tiap job.</p></div>
+          <div class="jb-actions">
+            <button class="btn btn-outline" data-all="OPEN">Buka semua</button>
+            <button class="btn btn-outline" data-all="CLOSE">Tutup semua</button>
+            <button class="btn btn-outline" data-sys="quota-all">Reset kuota semua</button>
+            <button class="btn btn-outline jb-danger" data-sys="reset-all">Reset semua job</button>
+          </div>
         </div>
-        <label>Teks job<textarea id="newJobText" maxlength="3000" placeholder="Perintah yang harus dikerjakan user"></textarea></label>
-        <button class="btn btn-primary" id="newJobBtn" type="button">+ Tambah job</button>
+        <div class="jb-grid" id="jobAdminBoxes"></div>
       </div>
 
-      <div class="jb-grid" id="jobAdminBoxes"></div>
+      <!-- Pesan sukses/error: tetap di luar agar selalu terlihat -->
       <p class="message" id="jobAdminMsg" role="status"></p>
       <div class="jb-admin-toast" id="jbAdminToast" role="status"></div>
 
-      <!-- PENGAMBILAN JOB: email yang sedang dikerjakan user (belum disetor) -->
-      <h3 style="margin:22px 0 10px">Pengambilan job <small style="font-weight:400;color:var(--muted)">(sedang dikerjakan)</small></h3>
-      <div class="table-wrap"><table>
-        <thead><tr><th>Tanggal</th><th>Pengguna</th><th>Job</th><th>Email</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
-        <tbody id="jobClaimRows"></tbody>
-      </table></div>
-
-      <!-- STORAN: email yang sudah disetor user, terpisah per job -->
-      <h3 style="margin:22px 0 10px">Storan email per job <small style="font-weight:400;color:var(--muted)">(sudah disetor user)</small></h3>
-      <div class="jb-grid" id="jobStoranBoxes"></div>
-
-      <!-- RIWAYAT SELESAI -->
-      <div class="panel-heading" style="margin:22px 0 10px">
-        <h3 style="margin:0">Riwayat pengambilan selesai</h3>
-        <button class="btn btn-outline" data-sys="clear-history">Hapus semua riwayat selesai</button>
+      <!-- ===== Control Pengambilan Job ===== -->
+      <div class="panel table-panel" data-view="claims" data-label="Pengambilan Job" data-icon="◷" data-desc="Email yang sedang dikerjakan">
+        <!-- PENGAMBILAN JOB: email yang sedang dikerjakan user (belum disetor) -->
+        <h3 style="margin:0 0 10px">Pengambilan job <small style="font-weight:400;color:var(--muted)">(sedang dikerjakan)</small></h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Tanggal</th><th>Pengguna</th><th>Job</th><th>Email</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody id="jobClaimRows"></tbody>
+        </table></div>
       </div>
-      <div class="table-wrap"><table>
-        <thead><tr><th>Tanggal</th><th>Pengguna</th><th>Job</th><th>Email</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
-        <tbody id="jobHistoryRows"></tbody>
-      </table></div>
-    </section>
+
+      <!-- ===== Control Storan Email ===== -->
+      <div class="panel table-panel" data-view="storan" data-label="Storan Email" data-icon="▤" data-desc="Email yang sudah disetor user">
+        <!-- STORAN: email yang sudah disetor user, terpisah per job -->
+        <h3 style="margin:0 0 10px">Storan email per job <small style="font-weight:400;color:var(--muted)">(sudah disetor user)</small></h3>
+        <div class="jb-grid" id="jobStoranBoxes"></div>
+      </div>
+
+      <!-- ===== Control Riwayat Job ===== -->
+      <div class="panel table-panel" data-view="history" data-label="Riwayat Job" data-icon="↺" data-desc="Pengambilan yang sudah selesai">
+        <!-- RIWAYAT SELESAI -->
+        <div class="panel-heading" style="margin:0 0 10px">
+          <h3 style="margin:0">Riwayat pengambilan selesai</h3>
+          <button class="btn btn-outline" data-sys="clear-history">Hapus semua riwayat selesai</button>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Tanggal</th><th>Pengguna</th><th>Job</th><th>Email</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody id="jobHistoryRows"></tbody>
+        </table></div>
+      </div>
+
+    </div>
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -449,7 +509,8 @@
     <!-- ===== AKHIR KONTROL JOB EMAIL (BARU) ===== -->
 
     <!-- ===== INFORMASI & SALURAN WHATSAPP (BARU) ===== -->
-    <section class="panel table-panel" id="infoAdmin">
+    <section class="panel table-panel" id="infoAdmin"
+      data-view="info" data-label="Informasi &amp; WhatsApp" data-icon="✎" data-desc="Pengumuman dan link saluran">
       <div class="panel-heading">
         <div><h2>Informasi &amp; Saluran WhatsApp</h2><p>Informasi tampil di Beranda dashboard pengguna. Tombol WhatsApp membuka link yang Anda isi.</p></div>
       </div>
@@ -578,7 +639,9 @@
     </script>
     <!-- ===== AKHIR INFORMASI & SALURAN WHATSAPP (BARU) ===== -->
 
-    <section class="panel table-panel">
+    <!-- ===== Control Penarikan ===== -->
+    <section class="panel table-panel"
+      data-view="withdraw" data-label="Penarikan" data-icon="⇩" data-desc="Proses permintaan penarikan">
       <div class="panel-heading"><div><h2>Penarikan saldo</h2><p>Proses permintaan penarikan. Jika ditolak, saldo pengguna dikembalikan otomatis.</p></div></div>
       <div class="table-wrap"><table>
         <thead><tr><th>Tanggal</th><th>Pengguna</th><th>E-wallet</th><th>Nominal</th><th>Status</th><th>Catatan admin</th><th>Aksi</th></tr></thead>
@@ -587,7 +650,9 @@
     </section>
 
     <section class="workspace-grid">
-      <div class="panel">
+      <!-- ===== Control Saldo ===== -->
+      <div class="panel"
+        data-view="balance" data-label="Saldo" data-icon="Rp" data-desc="Tambah atau kurangi saldo pengguna">
         <div class="panel-heading"><div><h2>Penyesuaian saldo</h2><p>Semua perubahan dicatat di riwayat transaksi.</p></div></div>
         <form id="balanceForm">
           <label>Pilih pengguna
@@ -607,7 +672,9 @@
         <p class="message" id="balanceMessage" role="status"></p>
       </div>
 
-      <div class="panel">
+      <!-- ===== Control Pengguna ===== -->
+      <div class="panel"
+        data-view="users" data-label="Pengguna" data-icon="♙" data-desc="Daftar akun dan saldo">
         <div class="panel-heading"><div><h2>Daftar pengguna</h2><p>Saldo dan peran akun.</p></div></div>
         <div class="table-wrap"><table>
           <thead><tr><th>Nama</th><th>Email</th><th>Peran</th><th>Saldo</th></tr></thead>
@@ -616,7 +683,9 @@
       </div>
     </section>
 
-    <section class="panel table-panel">
+    <!-- ===== Control Transaksi ===== -->
+    <section class="panel table-panel"
+      data-view="trx" data-label="Transaksi" data-icon="⇄" data-desc="Catatan perubahan saldo">
       <div class="panel-heading"><div><h2>Transaksi terbaru</h2><p>Catatan perubahan saldo.</p></div></div>
       <div class="table-wrap"><table>
         <thead><tr><th>Tanggal</th><th>Pengguna</th><th>Jenis</th><th>Keterangan</th><th>Nominal</th><th>Status</th></tr></thead>
