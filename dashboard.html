@@ -756,16 +756,108 @@
       </div>
     </section>
 
+    <!-- ===== SYARAT & KETENTUAN (DIUBAH: isi lengkap bergaya kartu) ===== -->
     <section class="view" data-view="terms">
-      <div class="card">
-        <h2 class="card-title">Syarat &amp; Ketentuan</h2>
-        <p class="muted" style="line-height:1.7">
-          Tulis syarat dan ketentuan layanan Anda di sini.
-          Contoh: harga per Gmail, jadwal penarikan, dan sanksi pelanggaran.
-        </p>
-        <button class="btn" type="button" data-open="home">← Kembali</button>
+      <style>
+        .tc-head{margin:2px 2px 16px}
+        .tc-head h2{margin:0 0 6px;font-size:24px;letter-spacing:-.02em}
+        .tc-head p{margin:0;font-size:13px;color:var(--muted)}
+        .tc-card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:18px 18px;margin-bottom:14px;
+          box-shadow:0 8px 24px rgba(15,23,42,.06)}
+        .tc-title{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+        .tc-title h3{margin:0;font-size:17px;letter-spacing:-.01em}
+        .tc-ico{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:15px;font-weight:800;
+          background:#dcfce7;color:#047857;border:1px solid #bbf7d0}
+        .tc-ico.warn{background:#fef3c7;color:#92400e;border-color:#fde68a}
+        .tc-ico.bad{background:#fee2e2;color:#b91c1c;border-color:#fecaca}
+        .tc-list{margin:0;padding-left:20px;font-size:14px;line-height:1.6}
+        .tc-list li{margin:5px 0}
+        .tc-key{list-style:none;margin:0;padding:0}
+        .tc-key li{position:relative;padding-left:18px;margin:0 0 12px;font-size:14px;line-height:1.55}
+        .tc-key li:last-child{margin-bottom:0}
+        .tc-key li::before{content:"";position:absolute;left:0;top:8px;width:7px;height:7px;border-radius:50%;background:var(--blue)}
+        .tc-key b{display:block}
+        .tc-key span{color:var(--muted)}
+        .tc-end{margin:0;font-size:14px;color:var(--muted);line-height:1.6}
+        .tc-back{display:block;width:100%;margin-top:4px;padding:15px;border:0;border-radius:16px;font-weight:800;font-size:14px;cursor:pointer;
+          color:#052e1b;background:linear-gradient(135deg,var(--blue),var(--blue2));box-shadow:0 10px 24px rgba(5,150,105,.25)}
+        .tc-back:active{transform:scale(.99)}
+      </style>
+
+      <div class="tc-head">
+        <h2>Syarat &amp; Ketentuan</h2>
+        <p>Dengan menggunakan website ini, Anda dianggap telah membaca, memahami, dan menyetujui seluruh ketentuan berikut.</p>
       </div>
+
+      <div class="tc-card">
+        <div class="tc-title"><span class="tc-ico warn">!</span><h3>Penting</h3></div>
+        <ul class="tc-key">
+          <li><b>Kepemilikan Gmail</b><span>Pengguna hanya diperbolehkan menyetorkan Gmail milik sendiri atau Gmail yang telah diberikan izin oleh pemiliknya. Dilarang menyetorkan Gmail milik orang lain tanpa izin.</span></li>
+          <li><b>Persetujuan Pengguna</b><span>Seluruh proses stor Gmail dilakukan secara sukarela tanpa adanya paksaan dari pihak mana pun. Dengan melakukan stor Gmail, pengguna menyatakan bahwa tindakan tersebut dilakukan atas kemauan sendiri.</span></li>
+          <li><b>Kepatuhan</b><span>Website ini tidak berafiliasi dengan Google. Pengguna bertanggung jawab penuh atas data yang disetorkan dan wajib mematuhi ketentuan yang berlaku dari Google maupun peraturan perundang-undangan yang berlaku.</span></li>
+          <li><b>Perubahan Ketentuan</b><span>Admin berhak mengubah syarat dan ketentuan sewaktu-waktu tanpa pemberitahuan sebelumnya.</span></li>
+          <li><b>Persetujuan</b><span>Dengan menggunakan website ini dan melakukan stor Gmail, pengguna dianggap telah membaca, memahami, dan menyetujui seluruh Syarat &amp; Ketentuan yang berlaku.</span></li>
+        </ul>
+      </div>
+
+      <div class="tc-card">
+        <div class="tc-title"><span class="tc-ico">✉</span><h3>Ketentuan Umum</h3></div>
+        <ul class="tc-list">
+          <li>Hanya menerima alamat @gmail.com yang valid.</li>
+          <li>Satu baris hanya boleh berisi 1 alamat Gmail.</li>
+          <li>Spasi di awal maupun akhir akan dihapus otomatis.</li>
+          <li>Gmail duplikat akan dihapus otomatis.</li>
+          <li>Huruf besar dan kecil dianggap sama (Case Insensitive).</li>
+        </ul>
+      </div>
+
+      <div class="tc-card">
+        <div class="tc-title"><span class="tc-ico">✓</span><h3>Ketentuan Format</h3></div>
+        <ul class="tc-list">
+          <li>Jika Rules Suffix aktif, Gmail wajib menggunakan suffix yang telah ditentukan Admin.</li>
+          <li>Jika Rules Angka aktif, Gmail wajib diakhiri angka 1–100.</li>
+          <li>Admin dapat mengaktifkan atau menonaktifkan kedua rules tersebut kapan saja.</li>
+          <li>Gmail yang tidak sesuai format akan otomatis ditolak.</li>
+        </ul>
+      </div>
+
+      <div class="tc-card">
+        <div class="tc-title"><span class="tc-ico">◷</span><h3>Proses Verifikasi</h3></div>
+        <ul class="tc-list">
+          <li>Status awal setiap storan adalah Pending.</li>
+          <li>Estimasi pengecekan sekitar 24–30 jam.</li>
+          <li>Setelah diverifikasi, status akan berubah menjadi Diterima atau Ditolak.</li>
+          <li>Hanya Gmail yang berstatus Diterima yang akan mendapatkan pembayaran.</li>
+        </ul>
+      </div>
+
+      <div class="tc-card">
+        <div class="tc-title"><span class="tc-ico">Rp</span><h3>Saldo</h3></div>
+        <ul class="tc-list">
+          <li>Saldo dihitung berdasarkan jumlah Gmail yang diterima × harga Gmail yang berlaku saat proses verifikasi.</li>
+          <li>Saldo akan masuk secara otomatis setelah Admin menyetujui Gmail.</li>
+          <li>Penarikan hanya dapat dilakukan apabila fitur penarikan sedang dibuka oleh Admin.</li>
+        </ul>
+      </div>
+
+      <div class="tc-card">
+        <div class="tc-title"><span class="tc-ico bad">✕</span><h3>Larangan</h3></div>
+        <ul class="tc-list">
+          <li>Dilarang mengirim Gmail palsu atau tidak valid.</li>
+          <li>Dilarang mengirim Gmail yang sama berulang kali.</li>
+          <li>Dilarang menyalahgunakan sistem dalam bentuk apa pun.</li>
+          <li>Pelanggaran dapat menyebabkan Gmail ditolak, saldo dibatalkan, atau akun diblokir secara permanen.</li>
+        </ul>
+      </div>
+
+      <div class="tc-card">
+        <div class="tc-title"><span class="tc-ico">★</span><h3>Penutup</h3></div>
+        <p class="tc-end">Dengan melakukan stor Gmail, pengguna dianggap telah membaca, memahami, dan menyetujui seluruh syarat dan ketentuan yang berlaku.</p>
+      </div>
+
+      <button class="tc-back" type="button" data-open="home">Saya sudah paham, kembali</button>
     </section>
+    <!-- ===== AKHIR SYARAT & KETENTUAN ===== -->
 
     <section class="view" data-view="leaderboard">
       <div class="card">
