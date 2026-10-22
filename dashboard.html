@@ -200,6 +200,10 @@
     .jb-notice pre{margin:0;white-space:pre-wrap;word-break:break-word;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;color:#78350f}
     .jb-info{background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d;margin-top:10px}
 
+    /* Pemberitahuan storan ditutup (BARU) */
+    .jb-locked{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;margin-top:10px}
+    .jb-locked b{color:#991b1b}
+
     .jb-listbox{border:1px solid var(--line);border-radius:18px;padding:12px;margin-top:12px;background:#fff}
     .jb-listhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
     .jb-listhead small{color:var(--muted)}
@@ -286,6 +290,14 @@
     function activeClaim(d, jobId) {
       return d.claims.filter(function (c) { return c.jobId === jobId && isActive(c); })[0] || null;
     }
+
+    // Status storan per job (BARU): default terbuka bila server belum mengirim data.
+    // Storan terpisah dari status job: job boleh Open sementara storan Close.
+    function storanOpen(jobId) {
+      var j = data && data.jobs.filter(function (x) { return x.id === jobId; })[0];
+      return !j || j.storanOpen !== false;
+    }
+
     function btn(act, label, cls, val) {
       return '<button type="button" class="jb-btn ' + (cls || '') + '" data-act="' + act + '"' +
         (val ? ' data-val="' + escapeHtml(val) + '"' : '') + '>' + label + '</button>';
@@ -311,6 +323,13 @@
         '<p class="muted">Upah masuk ke saldo setelah admin menyetujui. Gmail yang tidak disetor tidak dibayar.</p></div>';
     }
 
+    // Pemberitahuan saat storan ditutup admin (BARU)
+    function lockedHtml() {
+      return '<div class="jb-notice jb-locked"><b>🔒 Storan ditutup</b>' +
+        'Admin sedang menutup storan. Anda tetap bisa menyalin Gmail dan mengerjakan job, ' +
+        'tetapi setoran baru bisa dikirim setelah storan dibuka kembali.</div>';
+    }
+
     function claimHtml(ac) {
       var instr = ac.instruction || '';
       var left = ac.emails.filter(function (e) { return !copied[e]; }).length;
@@ -332,7 +351,9 @@
         (instr ? btn('copy-text', ICON + ' Salin teks job', '') : '') +
         btn('copy-all', ICON + ' Salin semua teks (job + Gmail)', '') +
         (ac.status === 'Diambil'
-          ? depositHtml(ac) + btn('finish', '✓ Tandai selesai (setor semua)', 'success', ac.id)
+          ? (storanOpen(ac.jobId)
+              ? depositHtml(ac) + btn('finish', '✓ Tandai selesai (setor semua)', 'success', ac.id)
+              : lockedHtml())
           : '<div class="jb-notice jb-info">Menunggu pemeriksaan admin.</div>');
     }
 
@@ -365,12 +386,14 @@
         var ac = activeClaim(d, j.id);
         var can = j.status === 'OPEN' && j.available > 0 && j.price > 0;
         var open = openId === j.id;
+        var stClosed = j.storanOpen === false;
         return '<div class="jb-card' + (open ? ' open' : '') + (can || ac ? '' : ' off') + '">' +
           '<div class="jb-head" role="button" tabindex="0" data-act="toggle" data-val="' + j.id + '">' +
             '<div class="jb-top"><div>' +
               '<strong class="jb-title">' + escapeHtml(j.name) + '</strong> ' +
               (ac ? '<span class="badge warn">Sedang dikerjakan</span>'
                   : '<span class="badge ' + (j.status === 'OPEN' ? 'ok' : 'warn') + '">' + (j.status === 'OPEN' ? 'Buka' : 'Tutup') + '</span>') +
+              (stClosed ? ' <span class="badge warn">Storan tutup</span>' : '') +
               '<div class="jb-sub">' + j.available + ' sisa · <span class="jb-price">' + money(j.price) + '/email</span></div>' +
             '</div><span class="jb-chev">' + (open ? '▲ Tutup' : '▼ Detail') + '</span></div>' +
             '<div class="jb-bar"><i style="width:' + j.usedPct + '%"></i></div>' +
@@ -516,6 +539,8 @@
 
       // Kirim setoran: hanya Gmail yang sudah dikerjakan
       if (act === 'deposit' && ac) {
+        // Storan ditutup admin: batalkan dan muat ulang tampilan (BARU)
+        if (!storanOpen(ac.jobId)) { toast('Storan sedang ditutup.'); await load(); return; }
         var listText = (deposit[ac.id] || '').trim();
         var n = countLines(listText);
         if (!n) { toast('Tempel Gmail yang sudah dikerjakan.'); return; }
@@ -539,6 +564,8 @@
       }
 
       if (act === 'claim' || act === 'finish') {
+        // Storan ditutup admin: tombol selesai/setor semua tidak boleh jalan (BARU)
+        if (act === 'finish' && !storanOpen(ac ? ac.jobId : '')) { toast('Storan sedang ditutup.'); await load(); return; }
         if (act === 'finish' && !confirm('Tandai job ini sudah selesai dikerjakan?')) return;
         el.disabled = true;
         try {
@@ -880,6 +907,7 @@
           <li>Estimasi pengecekan sekitar 24–30 jam.</li>
           <li>Setelah diverifikasi, status akan berubah menjadi Diterima atau Ditolak.</li>
           <li>Hanya Gmail yang berstatus Diterima yang akan mendapatkan pembayaran.</li>
+          <li>Storan dapat ditutup oleh Admin sewaktu-waktu. Saat storan ditutup, setoran tidak dapat dikirim walaupun job sedang dibuka.</li>
         </ul>
       </div>
 
