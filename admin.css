@@ -117,3 +117,46 @@ input::placeholder, textarea::placeholder { color: #94a3b8; }
   .page-content { padding-top: 24px; }
   td, th { padding: 10px; }
 }
+
+/* ===== MENU CONTROL (BARU) ===== */
+[hidden] { display: none !important; }
+
+.ctl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: 14px;
+  margin: 4px 0 24px;
+}
+.ctl-btn {
+  display: flex; align-items: center; gap: 14px; width: 100%;
+  text-align: left; padding: 18px; font: inherit; color: var(--ink);
+  background: var(--card); border: 1px solid var(--line); border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(15,23,42,.06);
+  transition: transform .2s, border-color .2s, box-shadow .2s;
+}
+.ctl-btn:hover {
+  transform: translateY(-2px); border-color: var(--blue);
+  box-shadow: 0 14px 30px rgba(5,150,105,.16);
+}
+.ctl-btn:focus-visible { outline: 3px solid rgba(32,232,135,.45); outline-offset: 2px; }
+.ctl-ico {
+  flex: none; width: 46px; height: 46px; border-radius: 14px;
+  display: grid; place-items: center; font-size: 20px; font-weight: 800;
+  color: #052e1b; background: linear-gradient(135deg, var(--blue), var(--blue2));
+  box-shadow: 0 8px 20px rgba(5,150,105,.25);
+}
+.ctl-btn b { display: block; font-size: 14px; line-height: 1.3; }
+.ctl-btn small { display: block; margin-top: 3px; font-size: 12px; color: var(--muted); }
+
+.ctl-close-bar { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+
+/* Saldo & Pengguna: tampil penuh saat dibuka satu per satu */
+.workspace-grid { grid-template-columns: 1fr; }
+
+@media (max-width: 600px) {
+  .ctl-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .ctl-btn { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px; border-radius: 16px; }
+  .ctl-ico { width: 40px; height: 40px; border-radius: 12px; }
+  .ctl-btn b { font-size: 13px; }
+  .ctl-btn small { font-size: 11px; }
+}
