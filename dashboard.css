@@ -1,4 +1,3 @@
-```css
 .rx {
   --blue: #059669;
   --blue2: #20e887;
@@ -660,4 +659,28 @@ th {
     flex-direction: column;
   }
 }
-```
+
+/* ===== TAMBAHAN: MENU KEDUA (ikon kecil, 5 kolom) ===== */
+
+.quick-menu.qm-sm {
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  padding: 12px 8px;
+}
+
+.quick-menu.qm-sm button {
+  font-size: 11px;
+  gap: 6px;
+  padding: 8px 2px;
+}
+
+.quick-menu.qm-sm .qi {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  font-size: 17px;
+  color: #059669;
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, .12);
+}
