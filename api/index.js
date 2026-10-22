@@ -1,4 +1,3 @@
-
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -26,7 +25,8 @@ module.exports = async function handler(req, res) {
       headers: {
         'Content-Type': 'text/plain;charset=utf-8'
       },
-      body: JSON.stringify(req.body || {})
+      // PERBAIKAN: jangan membungkus dua kali jika body sudah berupa string
+      body: typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {})
     });
 
     const result = await upstream.json();
