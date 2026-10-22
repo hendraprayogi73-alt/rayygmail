@@ -357,18 +357,34 @@
           : '<div class="jb-notice jb-info">Menunggu pemeriksaan admin.</div>');
     }
 
+    // Pengambilan aktif yang membuat pengguna harus menyelesaikan dulu (BARU):
+    // hanya pengambilan dengan lebih dari 1 email. Jika semua pengambilan aktif
+    // hanya 1 email, pengguna boleh mengambil / menambah job lain.
+    function blockingClaims(d) {
+      return d.claims.filter(function (c) { return isActive(c) && c.qty > 1; });
+    }
+    function smallClaims(d) {
+      return d.claims.filter(function (c) { return isActive(c) && c.qty === 1; });
+    }
+
     function takeHtml(j, d) {
-      var other = d.claims.some(isActive);
+      var other = blockingClaims(d).length > 0;
       var reason = j.status !== 'OPEN' ? 'Job sedang ditutup oleh admin.'
         : (j.price <= 0 ? 'Harga job belum diatur admin.'
         : (j.available < 1 ? 'Stok email habis.'
         : (other ? 'Selesaikan job yang sedang dikerjakan terlebih dahulu.' : '')));
       if (reason) return '<p class="muted">' + reason + '</p>';
 
+      var small = smallClaims(d).length;
+      var addNote = small
+        ? '<div class="jb-notice jb-info" style="margin:0 0 10px"><b>➕ Tambah job</b>Anda sedang mengerjakan ' + small +
+          ' job dengan 1 email. Anda boleh mengambil job ini juga tanpa menyelesaikan yang lama.</div>'
+        : '';
+
       var max = Math.max(1, Math.min(j.maxPerClaim, j.available));
       var q = Math.min(Math.max(qty[j.id] || 1, 1), max);
       qty[j.id] = q;
-      return '<p class="muted" style="text-align:center">Jumlah email yang diambil</p>' +
+      return addNote + '<p class="muted" style="text-align:center">Jumlah email yang diambil</p>' +
         '<div class="jb-stepper">' +
           '<button type="button" data-act="qty-" data-val="' + j.id + '" aria-label="Kurangi">−</button>' +
           '<strong>' + q + '</strong>' +
@@ -566,6 +582,12 @@
       if (act === 'claim' || act === 'finish') {
         // Storan ditutup admin: tombol selesai/setor semua tidak boleh jalan (BARU)
         if (act === 'finish' && !storanOpen(ac ? ac.jobId : '')) { toast('Storan sedang ditutup.'); await load(); return; }
+        // Hanya pengambilan aktif dengan lebih dari 1 email yang memblokir job baru (BARU)
+        if (act === 'claim' && data && blockingClaims(data).length) {
+          toast('Selesaikan job yang sedang dikerjakan terlebih dahulu.');
+          await load();
+          return;
+        }
         if (act === 'finish' && !confirm('Tandai job ini sudah selesai dikerjakan?')) return;
         el.disabled = true;
         try {
