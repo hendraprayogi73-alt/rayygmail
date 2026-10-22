@@ -126,6 +126,9 @@
       .st-ctl .st-note{flex:1;min-width:140px;width:auto}
       .st-ctl .btn{flex:0 0 auto}
       .st-chk{background:#dbeafe;color:#1e40af}
+
+      /* Status job + storan berdampingan di kartu "Atur Job" (BARU) */
+      .jb-badges{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
     </style>
 
     <div id="jobAdmin">
@@ -148,7 +151,7 @@
       <!-- ===== Control Atur Job ===== -->
       <div class="panel table-panel" data-view="jobs" data-label="Atur Job" data-icon="⚙" data-desc="Harga, teks, stok, buka/tutup">
         <div class="panel-heading">
-          <div><h2>Kontrol Job Email</h2><p>Isi stok, atur harga, teks job, buka/tutup, tambah, hapus, dan reset tiap job.</p></div>
+          <div><h2>Kontrol Job Email</h2><p>Isi stok, atur harga, teks job, buka/tutup, tambah, hapus, dan reset tiap job. Status storan diatur terpisah di menu Storan Email.</p></div>
           <div class="jb-actions">
             <button class="btn btn-outline" data-all="OPEN">Buka semua</button>
             <button class="btn btn-outline" data-all="CLOSE">Tutup semua</button>
@@ -179,7 +182,7 @@
         <div class="panel-heading" style="margin:0 0 10px">
           <div>
             <h3 style="margin:0">Storan email per job <small style="font-weight:400;color:var(--muted)">(sudah disetor user)</small></h3>
-            <p style="margin-top:4px">Storan bisa dibuka/ditutup sendiri, walaupun job-nya sedang Open.</p>
+            <p style="margin-top:4px">Storan bisa dibuka/ditutup sendiri, walaupun job-nya sedang Open. Saat storan Close, user tetap bisa mengambil email tetapi tidak bisa menyetor.</p>
           </div>
           <div class="jb-actions">
             <button class="btn btn-primary" data-stor-all="OPEN">Open semua storan</button>
@@ -264,10 +267,17 @@
         return '<span class="st-pill ' + c + '">' + escapeHtml(state) + '</span>';
       }
 
+      // Status storan per job: default terbuka bila server belum mengirim data (BARU)
+      function isStoranOpen(j) { return j.storanOpen !== false; }
+
       function boxHtml(j) {
+        var stOpen = isStoranOpen(j);
         return '<div class="jb-box" data-job="' + j.id + '">' +
           '<div class="panel-heading" style="margin-bottom:8px"><h2>' + j.id.toUpperCase() + '</h2>' +
-          '<span class="btn ' + (j.status === 'OPEN' ? 'btn-primary' : 'btn-outline') + '" style="cursor:default">' + j.status + '</span></div>' +
+          '<div class="jb-badges">' +
+          '<span class="btn ' + (j.status === 'OPEN' ? 'btn-primary' : 'btn-outline') + '" style="cursor:default">' + j.status + '</span>' +
+          '<span class="st-pill ' + (stOpen ? 'st-ok' : 'st-bad') + '">' + (stOpen ? 'STORAN OPEN' : 'STORAN CLOSE') + '</span>' +
+          '</div></div>' +
           '<p class="jb-stock">Total ' + j.total + ' · Tersedia ' + j.available + ' · Diambil ' + j.taken + ' · Selesai ' + j.done + ' · Ditolak ' + j.rejected + ' · Kuota terpakai ' + j.usedPct + '%</p>' +
           (j.price <= 0 ? '<p class="message error">Harga belum diisi: user tidak bisa mengambil job ini.</p>' : '') +
           '<label>Nama job<input class="f-name" maxlength="40" value="' + escapeHtml(j.name) + '"></label>' +
@@ -313,12 +323,12 @@
         var ok = list.filter(function (x) { return x.state === 'Diterima'; }).length;
         var bad = list.filter(function (x) { return x.state === 'Ditolak'; }).length;
         var unused = ok + bad;
-        var storOpen = j.storanOpen !== false; // default: terbuka bila server belum mengirim data
+        var storOpen = isStoranOpen(j); // default: terbuka bila server belum mengirim data
 
         return '<div class="jb-box" data-storan="' + j.id + '">' +
           '<div class="panel-heading" style="margin-bottom:8px"><h2>' + j.id.toUpperCase() + ' · Storan</h2>' +
           '<span class="btn btn-outline" style="cursor:default">' + list.length + ' email</span></div>' +
-          '<p class="jb-stock">' + escapeHtml(j.name) + ' · Menunggu ' + wait + ' · Diterima ' + ok + ' · Ditolak ' + bad + '</p>' +
+          '<p class="jb-stock">' + escapeHtml(j.name) + ' · Job ' + (j.status === 'OPEN' ? 'Open' : 'Close') + ' · Menunggu ' + wait + ' · Diterima ' + ok + ' · Ditolak ' + bad + '</p>' +
 
           '<div class="st-claim" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">' +
           '<span>Status storan: <span class="st-pill ' + (storOpen ? 'st-ok' : 'st-bad') + '">' + (storOpen ? 'STORAN OPEN' : 'STORAN CLOSE') + '</span></span>' +
