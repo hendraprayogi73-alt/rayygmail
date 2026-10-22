@@ -176,7 +176,16 @@
       <!-- ===== Control Storan Email ===== -->
       <div class="panel table-panel" data-view="storan" data-label="Storan Email" data-icon="▤" data-desc="Email yang sudah disetor user">
         <!-- STORAN: email yang sudah disetor user, terpisah per job -->
-        <h3 style="margin:0 0 10px">Storan email per job <small style="font-weight:400;color:var(--muted)">(sudah disetor user)</small></h3>
+        <div class="panel-heading" style="margin:0 0 10px">
+          <div>
+            <h3 style="margin:0">Storan email per job <small style="font-weight:400;color:var(--muted)">(sudah disetor user)</small></h3>
+            <p style="margin-top:4px">Storan bisa dibuka/ditutup sendiri, walaupun job-nya sedang Open.</p>
+          </div>
+          <div class="jb-actions">
+            <button class="btn btn-primary" data-stor-all="OPEN">Open semua storan</button>
+            <button class="btn btn-outline jb-danger" data-stor-all="CLOSE">Close semua storan</button>
+          </div>
+        </div>
         <div class="jb-grid" id="jobStoranBoxes"></div>
       </div>
 
@@ -304,11 +313,19 @@
         var ok = list.filter(function (x) { return x.state === 'Diterima'; }).length;
         var bad = list.filter(function (x) { return x.state === 'Ditolak'; }).length;
         var unused = ok + bad;
+        var storOpen = j.storanOpen !== false; // default: terbuka bila server belum mengirim data
 
         return '<div class="jb-box" data-storan="' + j.id + '">' +
           '<div class="panel-heading" style="margin-bottom:8px"><h2>' + j.id.toUpperCase() + ' · Storan</h2>' +
           '<span class="btn btn-outline" style="cursor:default">' + list.length + ' email</span></div>' +
           '<p class="jb-stock">' + escapeHtml(j.name) + ' · Menunggu ' + wait + ' · Diterima ' + ok + ' · Ditolak ' + bad + '</p>' +
+
+          '<div class="st-claim" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">' +
+          '<span>Status storan: <span class="st-pill ' + (storOpen ? 'st-ok' : 'st-bad') + '">' + (storOpen ? 'STORAN OPEN' : 'STORAN CLOSE') + '</span></span>' +
+          '<div class="jb-actions">' +
+          '<button class="btn ' + (storOpen ? 'btn-outline' : 'btn-primary') + '" data-stor-set="OPEN" data-job="' + j.id + '"' + (storOpen ? ' disabled' : '') + '>Open storan</button>' +
+          '<button class="btn btn-outline jb-danger" data-stor-set="CLOSE" data-job="' + j.id + '"' + (storOpen ? '' : ' disabled') + '>Close storan</button>' +
+          '</div></div>' +
 
           (pending.length ? pending.map(function (c) {
             return '<div class="st-claim"><b>' + escapeHtml(c.userName) + '</b> · ' + c.qty + ' email · ' + money(c.total) +
@@ -387,6 +404,19 @@
       root.addEventListener('click', async function (e) {
         var t = e.target.closest('button');
         if (!t || t.disabled) return;
+
+        // ----- buka/tutup storan (per job & semua job) -----
+        if (t.hasAttribute('data-stor-set')) {
+          var sId = t.getAttribute('data-job');
+          var sSt = t.getAttribute('data-stor-set');
+          if (sSt === 'CLOSE' && !confirm('Tutup storan ' + sId.toUpperCase() + '? User tidak bisa menyetor sampai storan dibuka lagi.')) return;
+          return run('adminStoranSetStatus', { jobId: sId, status: sSt });
+        }
+        if (t.hasAttribute('data-stor-all')) {
+          var aSt = t.getAttribute('data-stor-all');
+          if (aSt === 'CLOSE' && !confirm('Tutup storan SEMUA job? User tidak bisa menyetor di job mana pun sampai dibuka lagi.')) return;
+          return run('adminStoranSetStatus', { jobId: 'all', status: aSt });
+        }
 
         // ----- tombol sistem (reset / bersihkan) -----
         var sys = t.getAttribute('data-sys');
@@ -638,6 +668,70 @@
     });
     </script>
     <!-- ===== AKHIR INFORMASI & SALURAN WHATSAPP (BARU) ===== -->
+
+    <!-- ===== Control Open/Close Penarikan (BARU) ===== -->
+    <section class="panel table-panel" id="wdCtl"
+      data-view="wdctl" data-label="Open/Close Penarikan" data-icon="⇅" data-desc="Buka atau tutup penarikan saldo">
+      <div class="panel-heading">
+        <div><h2>Open / Close Penarikan</h2><p>Saat ditutup, pengguna tidak bisa menarik saldo sampai Anda membukanya lagi.</p></div>
+        <span class="st-pill st-wait" id="wdState">Memuat…</span>
+      </div>
+      <div class="jb-box">
+        <p class="jb-stock" id="wdHint">Memuat status penarikan…</p>
+        <div class="jb-actions">
+          <button class="btn btn-primary" id="wdOpenBtn" type="button">Open penarikan</button>
+          <button class="btn btn-outline jb-danger" id="wdCloseBtn" type="button">Close penarikan</button>
+        </div>
+      </div>
+      <p class="message" id="wdMsg" role="status"></p>
+    </section>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      function g(id) { return document.getElementById(id); }
+      function say(t, err) { var m = g('wdMsg'); m.textContent = t || ''; m.className = 'message' + (err ? ' error' : ''); }
+
+      function paint(open) {
+        var s = g('wdState');
+        s.textContent = open ? 'PENARIKAN OPEN' : 'PENARIKAN CLOSE';
+        s.className = 'st-pill ' + (open ? 'st-ok' : 'st-bad');
+        g('wdHint').textContent = open
+          ? 'Penarikan sedang dibuka: pengguna bisa mengajukan penarikan saldo.'
+          : 'Penarikan sedang ditutup: pengguna tidak bisa mengajukan penarikan.';
+        g('wdOpenBtn').disabled = open;
+        g('wdCloseBtn').disabled = !open;
+      }
+
+      async function load() {
+        try {
+          var d = await api('adminWithdrawStatus', { token: getToken() });
+          paint(d.open !== false);
+        } catch (e) {
+          g('wdState').textContent = 'Tidak diketahui';
+          g('wdState').className = 'st-pill st-wait';
+          g('wdHint').textContent = 'Status belum bisa dimuat.';
+          say(e.message, true);
+        }
+      }
+
+      async function setOpen(open) {
+        if (!open && !confirm('Tutup penarikan? Pengguna tidak bisa menarik saldo sampai dibuka lagi.')) return;
+        say('Memproses…');
+        try {
+          var d = await api('adminWithdrawSet', { token: getToken(), open: open });
+          say(d.message || (open ? 'Penarikan dibuka.' : 'Penarikan ditutup.'));
+        } catch (e) {
+          say(e.message, true);
+        }
+        await load();
+      }
+
+      g('wdOpenBtn').addEventListener('click', function () { setOpen(true); });
+      g('wdCloseBtn').addEventListener('click', function () { setOpen(false); });
+      load();
+    });
+    </script>
+    <!-- ===== AKHIR Control Open/Close Penarikan (BARU) ===== -->
 
     <!-- ===== Control Penarikan ===== -->
     <section class="panel table-panel"
