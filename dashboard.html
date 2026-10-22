@@ -36,6 +36,17 @@
         <button type="button" data-go="profile"><span class="qi qi-purple">☺</span>Profil</button>
       </div>
 
+      <!-- ===== MENU KEDUA (BARU): Rules, S&K, Support, Komunitas, Leaderboard ===== -->
+      <!-- GANTI: 628XXXXXXXXXX = nomor WA admin, XXXXXXXX = kode grup komunitas -->
+      <div class="card quick-menu qm-sm">
+        <button type="button" data-open="rules"><span class="qi">☰</span>Rules</button>
+        <button type="button" data-open="terms"><span class="qi">⚖</span>S&amp;K</button>
+        <button type="button" data-link="https://wa.me/628XXXXXXXXXX"><span class="qi">🎧</span>Support</button>
+        <button type="button" data-link="https://chat.whatsapp.com/XXXXXXXX"><span class="qi">💬</span>Komunitas</button>
+        <button type="button" data-open="leaderboard"><span class="qi">🏆</span>Leaderboard</button>
+      </div>
+      <!-- ===== AKHIR MENU KEDUA (BARU) ===== -->
+
       <div class="stat-grid">
         <div class="card stat"><small>Diterima</small><strong id="statApproved">0</strong></div>
         <div class="card stat"><small>Menunggu</small><strong id="statPending">0</strong></div>
@@ -688,6 +699,42 @@
         <button class="btn btn-danger" id="logoutBtn" type="button">Keluar</button>
       </div>
     </section>
+
+    <!-- ===== HALAMAN BARU: RULES, S&K, LEADERBOARD ===== -->
+    <section class="view" data-view="rules">
+      <div class="card">
+        <h2 class="card-title">Rules</h2>
+        <ol class="muted" style="padding-left:18px;line-height:1.7">
+          <li>Kerjakan hanya Gmail dari job yang Anda ambil.</li>
+          <li>Jangan pernah mengirim kata sandi, OTP, atau kode pemulihan.</li>
+          <li>Setor hasil job sebelum batas waktu yang ditentukan admin.</li>
+          <li>Gmail yang tidak disetor tidak dibayar.</li>
+          <li>Penarikan saldo diproses setelah diperiksa admin.</li>
+        </ol>
+        <button class="btn" type="button" data-open="home">← Kembali</button>
+      </div>
+    </section>
+
+    <section class="view" data-view="terms">
+      <div class="card">
+        <h2 class="card-title">Syarat &amp; Ketentuan</h2>
+        <p class="muted" style="line-height:1.7">
+          Tulis syarat dan ketentuan layanan Anda di sini.
+          Contoh: harga per Gmail, jadwal penarikan, dan sanksi pelanggaran.
+        </p>
+        <button class="btn" type="button" data-open="home">← Kembali</button>
+      </div>
+    </section>
+
+    <section class="view" data-view="leaderboard">
+      <div class="card">
+        <h2 class="card-title">🏆 Leaderboard</h2>
+        <p class="muted">Peringkat berdasarkan total Gmail yang disetujui.</p>
+        <div id="lbList"><p class="muted">Memuat…</p></div>
+        <button class="btn" type="button" data-open="home">← Kembali</button>
+      </div>
+    </section>
+    <!-- ===== AKHIR HALAMAN BARU ===== -->
   </main>
 
   <nav class="bottom-nav" aria-label="Navigasi utama">
@@ -697,6 +744,44 @@
     <button type="button" data-nav="balance"><span>▣</span>Saldo</button>
     <button type="button" data-nav="profile"><span>☺</span>Profil</button>
   </nav>
+
+  <!-- ===== NAVIGASI HALAMAN BARU + LEADERBOARD (BARU) ===== -->
+  <script>
+  document.addEventListener('click', async function (e) {
+    var l = e.target.closest('[data-link]');
+    if (l) { window.open(l.getAttribute('data-link'), '_blank', 'noopener'); return; }
+
+    var o = e.target.closest('[data-open]');
+    if (!o) return;
+    var name = o.getAttribute('data-open');
+    var target = document.querySelector('.view[data-view="' + name + '"]');
+    if (!target) return;
+
+    document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
+    target.classList.add('active');
+    document.querySelectorAll('[data-nav]').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-nav') === name);
+    });
+    window.scrollTo(0, 0);
+
+    if (name === 'leaderboard') {
+      var box = document.getElementById('lbList');
+      box.innerHTML = '<p class="muted">Memuat…</p>';
+      try {
+        var d = await api('leaderboard', { token: getToken() });
+        var medals = ['🥇', '🥈', '🥉'];
+        box.innerHTML = (d.items || []).map(function (it, i) {
+          return '<div class="activity-item"><div><strong>' + (medals[i] || (i + 1) + '.') + ' ' +
+            escapeHtml(it.name) + '</strong></div><span class="status s-ok">' +
+            escapeHtml(it.total) + ' Gmail</span></div>';
+        }).join('') || '<div class="empty-state">Belum ada data.</div>';
+      } catch (err) {
+        box.innerHTML = '<p class="message error">Leaderboard belum tersedia: ' + escapeHtml(err.message) + '</p>';
+      }
+    }
+  });
+  </script>
+  <!-- ===== AKHIR NAVIGASI HALAMAN BARU ===== -->
 
   <script src="/app.js"></script>
 </body>
